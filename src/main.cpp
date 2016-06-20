@@ -12,7 +12,27 @@ int main()
 
 	auto win = glfwCreateWindow(320, 200, "Bad Window", nullptr, nullptr);
 
-	std::this_thread::sleep_for(std::chrono::seconds(2));
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+#ifdef _DEBUG
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+#endif
+
+	glfwMakeContextCurrent(win);
+
+	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
+
+	while (!glfwWindowShouldClose(win))
+	{
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		glfwSwapBuffers(win);
+
+		glfwPollEvents();
+	}
 
 	glfwDestroyWindow(win);
 

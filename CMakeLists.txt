@@ -18,14 +18,18 @@ endmacro()
 
 #linking and include dependencies
 add_subdirectory(glfw)
+add_subdirectory(assimp)
+include_directories(stb)
+set(STB_SRCS stb.h stb_image.h stb_dxt.h stb_vorbis.c)
 
 find_package(OpenGL REQUIRED)
 
 #source project
 add_subdirectory(src)
 
-add_executable(GLProj ${SRCS})
+add_executable(GLProj ${SRCS} ${STB_SRCS})
 
 target_link_libraries(GLProj glfw)
+target_link_libraries(GLProj Assimp)
 target_link_libraries(GLProj ${OPENGL_LIBRARIES})
 target_include_directories(GLProj PUBLIC ${OPENGL_INCLUDE_DIR})

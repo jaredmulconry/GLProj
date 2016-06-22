@@ -1,4 +1,6 @@
 #include "GLFW/glfw3.h"
+#include "assimp\Importer.hpp"
+#include "Texture.hpp"
 #include <chrono>
 #include <cstdlib>
 #include <thread>
@@ -10,7 +12,7 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	auto win = glfwCreateWindow(320, 200, "Bad Window", nullptr, nullptr);
+	auto win = glfwCreateWindow(640, 480, "Bad Window", nullptr, nullptr);
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);

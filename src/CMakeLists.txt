@@ -1,5 +1,4 @@
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 3.1)
 
 add_sources(main.cpp)
-
-include_directories(include)
+add_sources(include/Texture.hpp)

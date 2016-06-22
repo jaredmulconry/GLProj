@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 3.1)
 project(GLProj)
 
 macro (add_sources)
@@ -19,8 +19,7 @@ endmacro()
 #linking and include dependencies
 add_subdirectory(glfw)
 add_subdirectory(assimp)
-include_directories(stb)
-set(STB_SRCS stb.h stb_image.h stb_dxt.h stb_vorbis.c)
+set(STB_SRCS stb/stb.h stb/stb_image.h stb/stb_dxt.h stb/stb_vorbis.c)
 
 find_package(OpenGL REQUIRED)
 
@@ -30,6 +29,9 @@ add_subdirectory(src)
 add_executable(GLProj ${SRCS} ${STB_SRCS})
 
 target_link_libraries(GLProj glfw)
-target_link_libraries(GLProj Assimp)
+target_link_libraries(GLProj assimp)
 target_link_libraries(GLProj ${OPENGL_LIBRARIES})
 target_include_directories(GLProj PUBLIC ${OPENGL_INCLUDE_DIR})
+target_include_directories(GLProj PUBLIC stb)
+target_include_directories(GLProj PUBLIC assimp/include)
+target_include_directories(GLProj PUBLIC src/include)

@@ -1,5 +1,5 @@
 #pragma once
-#include <gl\GL.h>
+#include "OpenGLTypes.hpp"
 
 namespace GlProj
 {
@@ -8,7 +8,10 @@ namespace GlProj
 		class Texture
 		{
 			GLuint textureHandle = invalidHandle;
+			explicit Texture(GLuint) noexcept;
 		public:
+			friend class TextureManager;
+
 			static const constexpr GLuint invalidHandle = GLuint(-1);
 			Texture() noexcept = default;
 			Texture(const Texture&) = delete;
@@ -16,7 +19,7 @@ namespace GlProj
 			Texture& operator=(Texture&&) noexcept;
 			~Texture();
 
-			GLuint handle() const noexcept;
+			GLuint GetHandle() const noexcept;
 		};
 	}
 }

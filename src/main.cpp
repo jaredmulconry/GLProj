@@ -22,7 +22,6 @@ int main()
 #ifdef _DEBUG
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif
-
 	glfwMakeContextCurrent(win);
 
 	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);

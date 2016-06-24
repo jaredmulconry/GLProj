@@ -11,6 +11,10 @@ namespace GlProj
 
 		TextureManager* GetTextureManager();
 
-		std::shared_ptr<Texture> LoadTexture(TextureManager*, const char*);
+		std::shared_ptr<Texture> LoadTexture(TextureManager*, const std::string&);
+		std::shared_ptr<Texture> RegisterTexture(TextureManager*, GLuint, const std::string&);
+		std::shared_ptr<Texture> FindCachedTextureByPath(TextureManager*, const std::string&);
+		std::shared_ptr<Texture> FindCachedTextureByName(TextureManager*, const std::string&);
+		void ReleaseUnused(TextureManager*);
 	}
 }

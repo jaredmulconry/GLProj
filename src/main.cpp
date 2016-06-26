@@ -1,11 +1,17 @@
 #include "GLFW/glfw3.h"
 #include "assimp\Importer.hpp"
 #include "Texture.hpp"
+#include "TextureManager.hpp"
 #include <chrono>
 #include <cstdlib>
+#include <exception>
+#include <iostream>
 #include <thread>
 
+using GlProj::Graphics::GetTextureManager;
+
 int main()
+try
 {
 	if (glfwInit() == GLFW_FALSE)
 	{
@@ -24,6 +30,10 @@ int main()
 #endif
 	glfwMakeContextCurrent(win);
 
+	{
+		auto tex1 = LoadTexture(GetTextureManager(), "./image.png");
+	}
+
 	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
 
 	while (!glfwWindowShouldClose(win))
@@ -38,4 +48,9 @@ int main()
 	glfwDestroyWindow(win);
 
 	glfwTerminate();
+}
+catch(std::exception& e)
+{
+	std::cout << e.what() << std::endl;
+	throw;
 }

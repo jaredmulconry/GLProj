@@ -6,7 +6,6 @@
 #include "stb_image.h"
 #include <experimental\filesystem>
 #include <stdexcept>
-#include <string>
 #include <unordered_map>
 #include <utility>
 
@@ -69,11 +68,12 @@ namespace GlProj
 			return &instance;
 		}
 
-		std::shared_ptr<Texture> LoadTexture(TextureManager* manager, const std::string& path)
+		std::shared_ptr<Texture> LoadTexture(TextureManager* manager, const std::string& path, bool replace)
 		{
+			if(!replace)
 			{
 				auto ptr = FindCachedTextureByPath(manager, path);
-				if (ptr == nullptr)
+				if (ptr != nullptr)
 				{
 					return std::move(ptr);
 				}
@@ -125,13 +125,14 @@ namespace GlProj
 
 			glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, externalFormat, GL_UNSIGNED_BYTE, pixelData.get());
 
-			return manager->RegisterTexture(handle, canonicalPath);
+			return manager->RegisterTexture(handle, canonical(path).u8string());
 		}
-		std::shared_ptr<Texture> RegisterTexture(TextureManager* manager, GLuint handle, const std::string& name)
+		std::shared_ptr<Texture> RegisterTexture(TextureManager* manager, GLuint handle, const std::string& name, bool replace)
 		{
+			if (!replace)
 			{
 				auto ptr = FindCachedTextureByName(manager, name);
-				if (ptr == nullptr)
+				if (ptr != nullptr)
 				{
 					return std::move(ptr);
 				}
@@ -140,13 +141,13 @@ namespace GlProj
 			return manager->RegisterTexture(handle, name);
 		}
 
-		std::shared_ptr<Texture> FindCachedTextureByPath(TextureManager* manager, const std::string& path)
+		std::shared_ptr<Texture> FindCachedTextureByPath(const TextureManager* manager, const std::string& path)
 		{
 			auto canonicalPath = canonical(path).u8string();
 			
 			return manager->FindByName(canonicalPath);
 		}
-		std::shared_ptr<Texture> FindCachedTextureByName(TextureManager* manager, const std::string& name)
+		std::shared_ptr<Texture> FindCachedTextureByName(const TextureManager* manager, const std::string& name)
 		{
 			return manager->FindByName(name);
 		}

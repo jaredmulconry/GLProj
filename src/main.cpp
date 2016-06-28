@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <exception>
 #include <iostream>
+#include <stdexcept>
 #include <thread>
 
 using GlProj::Graphics::GetTextureManager;
@@ -30,8 +31,13 @@ try
 #endif
 	glfwMakeContextCurrent(win);
 
+	Assimp::Importer importer;
+	auto bunny = importer.ReadFile("./data/models/bunny.obj", 0);
+	if (bunny == nullptr)
 	{
-		auto tex1 = LoadTexture(GetTextureManager(), "./image.png");
+		std::string err;
+		err += importer.GetErrorString();
+		throw std::runtime_error(err);
 	}
 
 	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);

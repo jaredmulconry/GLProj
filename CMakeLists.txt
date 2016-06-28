@@ -35,3 +35,7 @@ target_include_directories(GLProj PUBLIC ${OPENGL_INCLUDE_DIR})
 target_include_directories(GLProj PUBLIC stb)
 target_include_directories(GLProj PUBLIC assimp/include)
 target_include_directories(GLProj PUBLIC src/include)
+
+add_custom_command(TARGET GLProj PRE_BUILD
+										COMMAND ${CMAKE_COMMAND} -E copy_directory
+										"${CMAKE_CURRENT_SOURCE_DIR}/src/data" "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIGURATION>/data")

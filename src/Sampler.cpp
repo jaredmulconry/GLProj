@@ -10,6 +10,25 @@ namespace GlProj
 		{
 			glGenSamplers(1, &samplerHandle);
 		}
+		Sampler::Sampler(Sampler&& x) noexcept
+			:samplerHandle(x.samplerHandle)
+		{
+			x.samplerHandle = invalidHandle;
+		}
+		Sampler& Sampler::operator=(Sampler&& x) noexcept
+		{
+			if (this != &x)
+			{
+				if (samplerHandle != invalidHandle)
+				{
+					glDeleteSamplers(1, &samplerHandle);
+				}
+				samplerHandle = x.samplerHandle;
+				x.samplerHandle = invalidHandle;
+			}
+
+			return *this;
+		}
 		Sampler::~Sampler()
 		{
 			if (samplerHandle != invalidHandle)
@@ -55,19 +74,9 @@ namespace GlProj
 			glSamplerParameterf(samplerHandle, name, value);
 		}
 		template<>
-		void Sampler::SetParameter(GLenum name, GLint* values)
-		{
-			SetParameter(name, const_cast<const GLint*>(values));
-		}
-		template<>
 		void Sampler::SetParameter(GLenum name, const GLint* values)
 		{
 			glSamplerParameteriv(samplerHandle, name, values);
-		}
-		template<>
-		void Sampler::SetParameter(GLenum name, GLfloat* values)
-		{
-			SetParameter(name, const_cast<const GLfloat*>(values));
 		}
 		template<>
 		void Sampler::SetParameter(GLenum name, const GLfloat* values)

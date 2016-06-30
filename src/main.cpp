@@ -1,5 +1,6 @@
 #include "GLFW/glfw3.h"
 #include "assimp\Importer.hpp"
+#include "assimp\postprocess.h"
 #include "Texture.hpp"
 #include "TextureManager.hpp"
 #include <chrono>
@@ -19,8 +20,6 @@ try
 		return EXIT_FAILURE;
 	}
 
-	auto win = glfwCreateWindow(640, 480, "Bad Window", nullptr, nullptr);
-
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -29,10 +28,19 @@ try
 #ifdef _DEBUG
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif
+
+	auto win = glfwCreateWindow(640, 480, "Bad Window", nullptr, nullptr);
+	
+	if (win == nullptr)
+	{
+		return EXIT_FAILURE;
+	}
+
 	glfwMakeContextCurrent(win);
 
-	Assimp::Importer importer;
-	auto bunny = importer.ReadFile("./data/models/bunny.obj", 0);
+	Assimp::Importer importer{};
+	auto bunny = importer.ReadFile("./data/models/bunny.obj", aiPostProcessSteps::aiProcess_ImproveCacheLocality |
+																aiPostProcessSteps::aiProcess_Triangulate);
 	if (bunny == nullptr)
 	{
 		std::string err;
@@ -57,6 +65,6 @@ try
 }
 catch(std::exception& e)
 {
-	std::cout << e.what() << std::endl;
+	std::cerr << e.what() << std::endl;
 	throw;
 }

@@ -27,9 +27,9 @@ namespace GlProj
 		{
 			std::unordered_map<std::string, std::weak_ptr<Texture>> registeredTextures;
 		public:
-			std::shared_ptr<Texture> RegisterTexture(GLuint handle, const std::string& name)
+			std::shared_ptr<Texture> RegisterTexture(GLenum type, GLuint handle, const std::string& name)
 			{
-				auto newPtr = std::make_shared<Texture>(handle);
+				auto newPtr = std::make_shared<Texture>(type, handle);
 				registeredTextures[name] = newPtr;
 				return std::move(newPtr);
 			}
@@ -125,9 +125,9 @@ namespace GlProj
 
 			glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, externalFormat, GL_UNSIGNED_BYTE, pixelData.get());
 
-			return manager->RegisterTexture(handle, canonical(path).u8string());
+			return manager->RegisterTexture(GL_TEXTURE_2D, handle, canonical(path).u8string());
 		}
-		std::shared_ptr<Texture> RegisterTexture(TextureManager* manager, GLuint handle, const std::string& name, bool replace)
+		std::shared_ptr<Texture> RegisterTexture(TextureManager* manager, GLenum type, GLuint handle, const std::string& name, bool replace)
 		{
 			if (!replace)
 			{
@@ -138,7 +138,7 @@ namespace GlProj
 				}
 			}
 
-			return manager->RegisterTexture(handle, name);
+			return manager->RegisterTexture(type, handle, name);
 		}
 
 		std::shared_ptr<Texture> FindCachedTextureByPath(const TextureManager* manager, const std::string& path)

@@ -10,6 +10,7 @@ namespace GlProj
 		class Texture
 		{
 			GLuint textureHandle = invalidHandle;
+			GLenum textureType;
 		public:
 			static const constexpr GLuint invalidHandle = GLuint(-1);
 			Texture() noexcept = default;
@@ -17,9 +18,12 @@ namespace GlProj
 			Texture(Texture&&) noexcept;
 			Texture& operator=(Texture&&) noexcept;
 			~Texture();
-			explicit Texture(GLuint) noexcept;
+			Texture(GLenum, GLuint) noexcept;
 
 			GLuint GetHandle() const noexcept;
+			GLenum GetType() const noexcept;
+
+			void Bind() const noexcept;
 		};
 	}
 }

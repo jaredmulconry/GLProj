@@ -8,6 +8,7 @@ namespace GlProj
 	{
 		Texture::Texture(Texture&& o) noexcept
 			: textureHandle(o.textureHandle)
+			, textureType(o.textureType)
 		{
 			o.textureHandle = invalidHandle;
 		}
@@ -20,6 +21,7 @@ namespace GlProj
 					glDeleteTextures(1, &textureHandle);
 				}
 				textureHandle = o.textureHandle;
+				textureType = o.textureType;
 				o.textureHandle = invalidHandle;
 			}
 			return *this;
@@ -31,13 +33,22 @@ namespace GlProj
 				glDeleteTextures(1, &textureHandle);
 			}
 		}
-		Texture::Texture(GLuint handle) noexcept
+		Texture::Texture(GLenum type, GLuint handle) noexcept
 			: textureHandle(handle)
+			, textureType(type)
 		{
 		}
 		GLuint Texture::GetHandle() const noexcept
 		{
 			return textureHandle;
+		}
+		GLenum Texture::GetType() const noexcept
+		{
+			return textureType;
+		}
+		void Texture::Bind() const noexcept
+		{
+			glBindTexture(textureType, textureHandle);
 		}
 	}
 }

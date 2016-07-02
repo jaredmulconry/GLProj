@@ -41,6 +41,11 @@ namespace GlProj
 			return samplerHandle;
 		}
 
+		void Sampler::Bind(GLuint unit) const noexcept
+		{
+			glBindSampler(unit, samplerHandle);
+		}
+
 		template<>
 		void Sampler::GetParameter(GLenum name, GLint& value)
 		{

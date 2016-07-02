@@ -19,6 +19,8 @@ namespace GlProj
 
 			GLuint GetHandle() const noexcept;
 
+			void Bind(GLuint) const noexcept;
+
 			template<typename T>
 			void GetParameter(GLenum, T&);
 			template<typename T>

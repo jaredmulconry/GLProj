@@ -39,8 +39,7 @@ try
 	glfwMakeContextCurrent(win);
 
 	Assimp::Importer importer{};
-	auto bunny = importer.ReadFile("./data/models/bunny.obj", aiPostProcessSteps::aiProcess_ImproveCacheLocality |
-																aiPostProcessSteps::aiProcess_Triangulate);
+	auto bunny = importer.ReadFile("./data/models/bunny.obj", aiPostProcessSteps::aiProcess_Triangulate);
 	if (bunny == nullptr)
 	{
 		std::string err;

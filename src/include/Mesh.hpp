@@ -3,6 +3,8 @@
 #include "MeshDataBuffer.hpp"
 #include <vector>
 
+struct aiMesh;
+
 namespace GlProj
 {
 	namespace Graphics
@@ -12,7 +14,7 @@ namespace GlProj
 			std::vector<MeshDataBuffer> data;
 
 		public:
-
+			explicit Mesh(const aiMesh*);
 		};
 	}
 }

@@ -1,8 +1,11 @@
+#include "gl_core_4_1.h"
 #include "GLFW/glfw3.h"
 #include "assimp\Importer.hpp"
 #include "assimp\postprocess.h"
+#include "assimp\scene.h"
 #include "Texture.hpp"
 #include "TextureManager.hpp"
+#include "Mesh.hpp"
 #include <chrono>
 #include <cstdlib>
 #include <exception>
@@ -38,14 +41,21 @@ try
 
 	glfwMakeContextCurrent(win);
 
+	if (ogl_LoadFunctions() != ogl_LOAD_SUCCEEDED)
+	{
+		return EXIT_FAILURE;
+	}
+
 	Assimp::Importer importer{};
-	auto bunny = importer.ReadFile("./data/models/bunny.obj", aiPostProcessSteps::aiProcess_Triangulate);
+	auto bunny = importer.ReadFile("./data/models/bunny.obj", aiProcessPreset_TargetRealtime_Fast);
 	if (bunny == nullptr)
 	{
 		std::string err;
 		err += importer.GetErrorString();
 		throw std::runtime_error(err);
 	}
+
+	GlProj::Graphics::Mesh bunnyMesh{*bunny->mMeshes};
 
 	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
 

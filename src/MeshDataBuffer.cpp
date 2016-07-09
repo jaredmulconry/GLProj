@@ -52,27 +52,27 @@ namespace GlProj
 		}
 		void MeshDataBuffer::UpdateData(GLintptr offset, GLsizeiptr dataSize, const GLvoid * data) const noexcept
 		{
-			glBufferSubData(bufferType, offset, dataSize, data);
+			glBufferSubData(GetType(), offset, dataSize, data);
 		}
 		void* MeshDataBuffer::MapBuffer(GLintptr offset, GLsizeiptr dataSize, GLbitfield access) const noexcept
 		{
-			return glMapBufferRange(bufferType, offset, dataSize, access);
+			return glMapBufferRange(GetType(), offset, dataSize, access);
 		}
 		void MeshDataBuffer::UnmapBuffer() const noexcept
 		{
-			glUnmapBuffer(bufferType);
+			glUnmapBuffer(GetType());
 		}
 		void MeshDataBuffer::Bind() const noexcept
 		{
-			glBindBuffer(bufferType, meshDataHandle);
+			glBindBuffer(GetType(), GetHandle());
 		}
 		void MeshDataBuffer::BindBase(GLuint index) const noexcept
 		{
-			glBindBufferBase(bufferType, index, meshDataHandle);
+			glBindBufferBase(GetType(), index, GetHandle());
 		}
 		void MeshDataBuffer::BindRange(GLuint index, GLintptr offset, GLsizeiptr size) const noexcept
 		{
-			glBindBufferRange(bufferType, index, meshDataHandle, offset, size);
+			glBindBufferRange(GetType(), index, GetHandle(), offset, size);
 		}
 	}
 }

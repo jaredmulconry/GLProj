@@ -13,6 +13,10 @@ namespace GlProj
 			GLenum textureType;
 		public:
 			static const constexpr GLuint invalidHandle = GLuint(-1);
+
+			friend bool operator==(const Texture&, const Texture&) noexcept;
+			friend bool operator!=(const Texture&, const Texture&) noexcept;
+
 			Texture() noexcept = default;
 			Texture(const Texture&) = delete;
 			Texture(Texture&&) noexcept;

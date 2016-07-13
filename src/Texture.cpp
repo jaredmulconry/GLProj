@@ -50,5 +50,13 @@ namespace GlProj
 		{
 			glBindTexture(textureType, textureHandle);
 		}
+		bool operator==(const Texture& x, const Texture& y) noexcept
+		{
+			return x.textureHandle == y.textureHandle;
+		}
+		bool operator!=(const Texture& x, const Texture& y) noexcept
+		{
+			return !(x == y);
+		}
 	}
 }

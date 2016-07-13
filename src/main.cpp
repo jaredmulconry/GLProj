@@ -32,7 +32,7 @@ try
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif
 
-	auto win = glfwCreateWindow(640, 480, "Bad Window", nullptr, nullptr);
+	auto win = glfwCreateWindow(800, 600, "Bad Window", nullptr, nullptr);
 	
 	if (win == nullptr)
 	{

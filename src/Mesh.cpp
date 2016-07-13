@@ -61,3 +61,13 @@ GlProj::Graphics::Mesh::Mesh(const aiMesh* mesh)
 		}
 	}
 }
+
+bool GlProj::Graphics::operator==(const Mesh& x, const Mesh& y) noexcept
+{
+	return x.vertexData == y.vertexData && x.indices == y.indices && x.arrayBuffer == y.arrayBuffer;
+}
+
+bool GlProj::Graphics::operator!=(const Mesh& x, const Mesh& y) noexcept
+{
+	return !(x == y);
+}

@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.1)
 project(GLProj)
 
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
 macro (add_sources)
     file (RELATIVE_PATH _relPath "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}")
     foreach (_src ${ARGN})
@@ -19,7 +21,7 @@ endmacro()
 #linking and include dependencies
 add_subdirectory(glfw)
 add_subdirectory(assimp)
-set(STB_SRCS stb/stb.h stb/stb_image.h stb/stb_dxt.h stb/stb_vorbis.c)
+set(STB_SRCS stb/stb.h stb/stb_image.h stb/stb_dxt.h stb/stb_vorbis.c) 
 
 find_package(OpenGL REQUIRED)
 

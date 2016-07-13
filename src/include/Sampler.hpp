@@ -11,6 +11,9 @@ namespace GlProj
 		public:
 			static const constexpr GLuint invalidHandle = GLuint(-1);
 
+			friend bool operator==(const Sampler&, const Sampler&) noexcept;
+			friend bool operator!=(const Sampler&, const Sampler&) noexcept;
+
 			Sampler() noexcept;
 			Sampler(const Sampler&) = delete;
 			Sampler(Sampler&&) noexcept;

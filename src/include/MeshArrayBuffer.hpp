@@ -11,6 +11,9 @@ namespace GlProj
 		public:
 			static const constexpr GLuint invalidHandle = GLuint(-1);
 
+			friend bool operator==(const MeshArrayBuffer&, const MeshArrayBuffer&) noexcept;
+			friend bool operator!=(const MeshArrayBuffer&, const MeshArrayBuffer&) noexcept;
+
 			MeshArrayBuffer() noexcept;
 			MeshArrayBuffer(MeshArrayBuffer&&) noexcept;
 			MeshArrayBuffer& operator=(MeshArrayBuffer&&) noexcept;

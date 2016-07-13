@@ -88,5 +88,13 @@ namespace GlProj
 		{
 			glBindBufferRange(GetType(), index, GetHandle(), offset, size);
 		}
+		bool operator==(const MeshIndexBuffer& x, const MeshIndexBuffer& y) noexcept
+		{
+			return x.indexDataHandle == y.indexDataHandle;
+		}
+		bool operator!=(const MeshIndexBuffer& x, const MeshIndexBuffer& y) noexcept
+		{
+			return !(x == y);
+		}
 	}
 }

@@ -88,5 +88,13 @@ namespace GlProj
 		{
 			glSamplerParameterfv(samplerHandle, name, values);
 		}
+		bool operator==(const Sampler& x, const Sampler& y) noexcept
+		{
+			return x.samplerHandle == y.samplerHandle;
+		}
+		bool operator!=(const Sampler& x, const Sampler& y) noexcept
+		{
+			return !(x == y);
+		}
 	}
 }

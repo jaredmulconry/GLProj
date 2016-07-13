@@ -55,6 +55,8 @@ namespace GlProj
 			explicit Mesh(const aiMesh*);
 
 			void Bind() const noexcept;
+			friend bool operator==(const Mesh&, const Mesh&) noexcept;
+			friend bool operator!=(const Mesh&, const Mesh&) noexcept;
 		};
 	}
 }

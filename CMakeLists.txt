@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.1)
 project(GLProj)
 
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
 macro (add_sources)
     file (RELATIVE_PATH _relPath "${CMAKE_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}")
     foreach (_src ${ARGN})

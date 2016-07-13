@@ -13,7 +13,11 @@ namespace GlProj
 		public:
 			static const constexpr GLuint invalidHandle = GLuint(-1);
 
+			friend bool operator==(const MeshIndexBuffer&, const MeshIndexBuffer&) noexcept;
+			friend bool operator!=(const MeshIndexBuffer&, const MeshIndexBuffer&) noexcept;
+
 			MeshIndexBuffer() noexcept = default;
+			MeshIndexBuffer(const MeshIndexBuffer&) = delete;
 			MeshIndexBuffer(GLsizeiptr, const GLvoid*, GLenum = GL_STATIC_DRAW);
 			MeshIndexBuffer(GLsizeiptr, const aiFace*, GLenum = GL_STATIC_DRAW);
 			MeshIndexBuffer(MeshIndexBuffer&&) noexcept;

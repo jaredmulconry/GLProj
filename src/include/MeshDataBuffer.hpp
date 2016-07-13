@@ -12,7 +12,11 @@ namespace GlProj
 		public:
 			static const constexpr GLuint invalidHandle = GLuint(-1);
 
+			friend bool operator==(const MeshDataBuffer&, const MeshDataBuffer&) noexcept;
+			friend bool operator!=(const MeshDataBuffer&, const MeshDataBuffer&) noexcept;
+
 			MeshDataBuffer() noexcept = default;
+			MeshDataBuffer(const MeshDataBuffer&) = delete;
 			MeshDataBuffer(GLenum bufferType, GLsizeiptr dataSize, const GLvoid* data, GLenum usage);
 			MeshDataBuffer(MeshDataBuffer&&) noexcept;
 			MeshDataBuffer& operator=(MeshDataBuffer&&) noexcept;

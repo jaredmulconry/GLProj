@@ -74,5 +74,13 @@ namespace GlProj
 		{
 			glBindBufferRange(GetType(), index, GetHandle(), offset, size);
 		}
+		bool operator==(const MeshDataBuffer& x, const MeshDataBuffer& y) noexcept
+		{
+			return x.meshDataHandle == y.meshDataHandle && x.bufferType == y.bufferType;
+		}
+		bool operator!=(const MeshDataBuffer& x, const MeshDataBuffer& y) noexcept
+		{
+			return !(x == y);
+		}
 	}
 }

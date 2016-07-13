@@ -14,7 +14,7 @@ namespace GlProj
 		{
 			return !(x == y);
 		}
-		Shader::Shader(GLuint handle, GLenum type) noexcept
+		Shader::Shader(GLenum type, GLuint handle) noexcept
 			: shaderHandle(handle)
 			, shaderType(type)
 		{}
@@ -45,6 +45,14 @@ namespace GlProj
 			{
 				glDeleteShader(shaderHandle);
 			}
+		}
+		GLuint Shader::GetHandle() const noexcept
+		{
+			return shaderHandle;
+		}
+		GLenum Shader::GetType() const noexcept
+		{
+			return shaderType;
 		}
 	}
 }

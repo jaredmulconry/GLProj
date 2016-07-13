@@ -15,6 +15,7 @@ namespace GlProj
 			friend bool operator!=(const MeshArrayBuffer&, const MeshArrayBuffer&) noexcept;
 
 			MeshArrayBuffer() noexcept;
+			MeshArrayBuffer(const MeshArrayBuffer&) = delete;
 			MeshArrayBuffer(MeshArrayBuffer&&) noexcept;
 			MeshArrayBuffer& operator=(MeshArrayBuffer&&) noexcept;
 			~MeshArrayBuffer();

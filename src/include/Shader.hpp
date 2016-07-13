@@ -16,11 +16,14 @@ namespace GlProj
 			friend bool operator!=(const Shader&, const Shader&) noexcept;
 
 			Shader() noexcept = default;
-			Shader(GLuint, GLenum) noexcept;
+			Shader(GLenum, GLuint) noexcept;
 			Shader(const Shader&) = delete;
 			Shader(Shader&&) noexcept;
 			Shader& operator=(Shader&&) noexcept;
 			~Shader();
+
+			GLuint GetHandle() const noexcept;
+			GLenum GetType() const noexcept;
 		};
 	}
 }

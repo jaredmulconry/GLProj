@@ -17,6 +17,7 @@ namespace GlProj
 			friend bool operator!=(const MeshIndexBuffer&, const MeshIndexBuffer&) noexcept;
 
 			MeshIndexBuffer() noexcept = default;
+			MeshIndexBuffer(const MeshIndexBuffer&) = delete;
 			MeshIndexBuffer(GLsizeiptr, const GLvoid*, GLenum = GL_STATIC_DRAW);
 			MeshIndexBuffer(GLsizeiptr, const aiFace*, GLenum = GL_STATIC_DRAW);
 			MeshIndexBuffer(MeshIndexBuffer&&) noexcept;

@@ -22,7 +22,7 @@ namespace GlProj
 			std::shared_ptr<Shader> RegisterShader(GLenum type, GLuint handle, const std::string& name)
 			{
 				auto newPtr = std::make_shared<Shader>(type, handle);
-				registeredShaders[name] = newPtr;
+				registeredShaders.insert_or_assign(name, newPtr);
 				return std::move(newPtr);
 			}
 			std::shared_ptr<Shader> FindByName(const std::string& name) const
@@ -57,7 +57,7 @@ namespace GlProj
 			static ShaderManager instance;
 			return &instance;
 		}
-		std::shared_ptr<Shader> LoadShader(ShaderManager* manager, const std::string& path, bool replace)
+		std::shared_ptr<Shader> LoadShader(ShaderManager* manager, GLenum shaderType, const std::string& path, bool replace)
 		{
 			if(!replace)
 			{
@@ -114,13 +114,42 @@ namespace GlProj
 				throw std::runtime_error(errMessage);
 			}
 
+			auto shaderID = glCreateShader(shaderType);
+			auto source = sourceBuffer.get();
+			auto sourceSize = GLint(totalRead);
+			glShaderSource(shaderID, 1, &source, &sourceSize);
+			glCompileShader(shaderID);
 
+			GLint compileStatus;
+			glGetShaderiv(shaderID, GL_COMPILE_STATUS, &compileStatus);
+			if (compileStatus != GL_TRUE)
+			{
+				GLint logLength;
+				glGetShaderiv(shaderID, GL_INFO_LOG_LENGTH, &logLength);
+				auto log = std::make_unique<char[]>(logLength);
+				glGetShaderInfoLog(shaderID, logLength, nullptr, log.get());
+				std::string err = "Shader Compile Error.\n";
+				err += "File: " + path + '\n';
+				err += log.get();
 
-			return std::shared_ptr<Shader>();
+				glDeleteShader(shaderID);
+				throw std::runtime_error(err);
+			}
+
+			return manager->RegisterShader(shaderType, shaderID, canonical(path).u8string());
 		}
 		std::shared_ptr<Shader> RegisterShader(ShaderManager* manager, GLenum type, GLuint handle, const std::string& name, bool replace)
 		{
-			return std::shared_ptr<Shader>();
+			if (!replace)
+			{
+				auto ptr = FindCachedShaderByName(manager, name);
+				if (ptr != nullptr)
+				{
+					return std::move(ptr);
+				}
+			}
+
+			return manager->RegisterShader(type, handle, name);
 		}
 
 		std::shared_ptr<Shader> FindCachedShaderByPath(const ShaderManager* manager, const std::string& path)
@@ -136,6 +165,10 @@ namespace GlProj
 		void ReleaseUnused(ShaderManager* manager)
 		{
 			manager->CleanUpDangling();
+		}
+		std::shared_ptr<ShadingProgram> GenerateProgram(std::initializer_list<const std::shared_ptr<Shader>&>)
+		{
+			return std::shared_ptr<ShadingProgram>();
 		}
 	}
 }

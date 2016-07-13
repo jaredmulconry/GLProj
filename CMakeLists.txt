@@ -21,7 +21,7 @@ endmacro()
 #linking and include dependencies
 add_subdirectory(glfw)
 add_subdirectory(assimp)
-set(STB_SRCS stb/stb.h stb/stb_image.h stb/stb_dxt.h stb/stb_vorbis.c) 
+set(STB_SRCS stb/stb.h stb/stb_image.h stb/stb_dxt.h stb/stb_vorbis.c)
 
 find_package(OpenGL REQUIRED)
 

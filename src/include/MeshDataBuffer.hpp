@@ -16,6 +16,7 @@ namespace GlProj
 			friend bool operator!=(const MeshDataBuffer&, const MeshDataBuffer&) noexcept;
 
 			MeshDataBuffer() noexcept = default;
+			MeshDataBuffer(const MeshDataBuffer&) = delete;
 			MeshDataBuffer(GLenum bufferType, GLsizeiptr dataSize, const GLvoid* data, GLenum usage);
 			MeshDataBuffer(MeshDataBuffer&&) noexcept;
 			MeshDataBuffer& operator=(MeshDataBuffer&&) noexcept;

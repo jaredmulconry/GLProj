@@ -12,5 +12,6 @@ add_sources(include/MeshArrayBuffer.hpp MeshArrayBuffer.cpp)
 add_sources(include/Mesh.hpp Mesh.cpp)
 add_sources(include/Shader.hpp Shader.cpp)
 add_sources(include/ShaderManager.hpp ShaderManager.cpp)
+add_sources(include/ShadingProgram.hpp ShadingProgram.cpp)
 
 #file(COPY ./data/ DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/data)

@@ -2,6 +2,7 @@
 #include "gl_core_4_1.h"
 #include "GLFW\glfw3.h"
 #include "Shader.hpp"
+#include "ShadingProgram.hpp"
 #include <cerrno>
 #include <cstdio>
 #include <experimental\filesystem>
@@ -166,9 +167,46 @@ namespace GlProj
 		{
 			manager->CleanUpDangling();
 		}
-		std::shared_ptr<ShadingProgram> GenerateProgram(std::initializer_list<const std::shared_ptr<Shader>&>)
+		
+		std::unique_ptr<ShadingProgram> GenerateProgram()
 		{
-			return std::shared_ptr<ShadingProgram>();
+			return std::make_unique<ShadingProgram>(glCreateProgram());
+		}
+		std::unique_ptr<ShadingProgram> GenerateProgram(std::initializer_list<const std::shared_ptr<Shader>> shaders)
+		{
+			auto prog = GenerateProgram();
+			for (auto& s : shaders)
+			{
+				glAttachShader(prog->GetHandle(), s->GetHandle());
+			}
+			return prog;
+		}
+		void AttachShader(ShadingProgram* program, Shader* shader)
+		{
+			glAttachShader(program->GetHandle(), shader->GetHandle());
+		}
+		void DetachShader(ShadingProgram* program, Shader* shader)
+		{
+			glDetachShader(program->GetHandle(), shader->GetHandle());
+		}
+		void LinkProgram(ShadingProgram* program)
+		{
+			auto handle = program->GetHandle();
+			glLinkProgram(handle);
+
+			GLint linkStatus;
+			glGetProgramiv(handle, GL_LINK_STATUS, &linkStatus);
+			if (linkStatus != GL_TRUE)
+			{
+				GLint logLength;
+				glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &logLength);
+				auto logBuffer = std::make_unique<char[]>(logLength);
+				glGetProgramInfoLog(handle, logLength, nullptr, logBuffer.get());
+				std::string err = "Shader Program Linking Error.\n";
+				err += "Error: ";
+				err += logBuffer.get();
+				throw std::runtime_error(err);
+			}
 		}
 	}
 }

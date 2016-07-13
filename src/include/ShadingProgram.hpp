@@ -18,7 +18,7 @@ namespace GlProj
 			friend bool operator==(const ShadingProgram&, const ShadingProgram&) noexcept;
 			friend bool operator!=(const ShadingProgram&, const ShadingProgram&) noexcept;
 
-			ShadingProgram() = default;
+			ShadingProgram() noexcept = default;
 			ShadingProgram(const ShadingProgram&) = delete;
 			ShadingProgram(ShadingProgram&&) noexcept;
 			ShadingProgram& operator=(ShadingProgram&&) noexcept;
@@ -26,10 +26,6 @@ namespace GlProj
 			explicit ShadingProgram(GLuint) noexcept;
 
 			GLuint GetHandle() const noexcept;
-
-			void BindShader(const std::shared_ptr<Shader>&);
-			void DetachShader(const Shader&);
-			void LinkProgram();
 		};
 	}
 }

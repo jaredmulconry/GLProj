@@ -61,3 +61,8 @@ GlProj::Graphics::Mesh::Mesh(const aiMesh* mesh)
 		}
 	}
 }
+
+void GlProj::Graphics::Mesh::Bind() const noexcept
+{
+	arrayBuffer.Bind();
+}

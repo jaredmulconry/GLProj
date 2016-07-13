@@ -53,6 +53,8 @@ namespace GlProj
 
 		public:
 			explicit Mesh(const aiMesh*);
+
+			void Bind() const noexcept;
 		};
 	}
 }

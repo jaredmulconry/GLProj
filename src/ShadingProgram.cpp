@@ -3,6 +3,7 @@
 #include "GLFW\glfw3.h"
 #include "Shader.hpp"
 #include <algorithm>
+#include <memory>
 #include <stdexcept>
 #include <utility>
 
@@ -57,7 +58,48 @@ namespace GlProj
 		}
 		void ShadingProgram::FetchProgramInfo()
 		{
+			attributes.clear();
+			uniforms.clear();
+
 			//TODO: Query for vertex attribute and uniform information
+			GLint attributeCount;
+			glGetProgramiv(GetHandle(), GL_ACTIVE_ATTRIBUTES, &attributeCount);
+			attributes.reserve(attributeCount);
+			GLint nameLengthMax;
+			glGetProgramiv(GetHandle(), GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &nameLengthMax);
+			auto nameBuf = std::make_unique<char[]>(nameLengthMax);
+
+			for (GLint i = 0; i < attributeCount; ++i)
+			{
+				nameBuf[0] = '\0';
+				GLint size;
+				GLenum type;
+				glGetActiveAttrib(GetHandle(), GLuint(i), nameLengthMax, nullptr, &size, &type, nameBuf.get());
+				GLint loc = glGetAttribLocation(GetHandle(), nameBuf.get());
+				attributes.push_back(VertexAttribute{nameBuf.get(), type, loc, size});
+			}
+
+			GLint uniformCount;
+			glGetProgramiv(GetHandle(), GL_ACTIVE_UNIFORMS, &uniformCount);
+			uniforms.reserve(uniformCount);
+
+			glGetProgramiv(GetHandle(), GL_ACTIVE_UNIFORM_MAX_LENGTH, &nameLengthMax);
+			nameBuf = std::make_unique<char[]>(nameLengthMax);
+
+			for (GLint i = 0; i < uniformCount; ++i)
+			{
+				nameBuf[0] = '\0';
+				GLint size;
+				GLenum type;
+				GLint loc;
+				auto idx = GLuint(i);
+				glGetActiveUniformsiv(GetHandle(), 1, &idx, GL_UNIFORM_SIZE, &size);
+				glGetActiveUniformsiv(GetHandle(), 1, &idx, GL_UNIFORM_TYPE, &size);
+				glGetActiveUniformName(GetHandle(), idx, nameLengthMax, nullptr, nameBuf.get());
+				glGetUniformLocation(GetHandle(), nameBuf.get());
+
+				uniforms.push_back(UniformInformation{nameBuf.get(), type, loc, size});
+			}
 		}
 	}
 }

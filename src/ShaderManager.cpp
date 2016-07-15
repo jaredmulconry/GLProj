@@ -177,7 +177,7 @@ namespace GlProj
 			auto prog = GenerateProgram();
 			for (auto& s : shaders)
 			{
-				glAttachShader(prog->GetHandle(), s->GetHandle());
+				AttachShader(prog.get(), s.get());
 			}
 			return prog;
 		}
@@ -207,6 +207,8 @@ namespace GlProj
 				err += logBuffer.get();
 				throw std::runtime_error(err);
 			}
+
+			program->FetchProgramInfo();
 		}
 	}
 }

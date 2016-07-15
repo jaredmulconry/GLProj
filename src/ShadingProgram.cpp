@@ -56,6 +56,10 @@ namespace GlProj
 		{
 			return programHandle;
 		}
+		void ShadingProgram::Bind() const noexcept
+		{
+			glUseProgram(GetHandle());
+		}
 		void ShadingProgram::FetchProgramInfo()
 		{
 			attributes.clear();

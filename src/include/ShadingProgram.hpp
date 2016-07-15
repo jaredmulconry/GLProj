@@ -45,6 +45,8 @@ namespace GlProj
 			explicit ShadingProgram(GLuint) noexcept;
 
 			GLuint GetHandle() const noexcept;
+
+			void Bind() const noexcept;
 			void FetchProgramInfo();
 		};
 	}

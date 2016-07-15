@@ -1,6 +1,6 @@
 #pragma once
-#include "gl_core_4_1.h"
-#include <memory>
+#include "OpenGLTypes.hpp"
+#include <string>
 #include <vector>
 
 namespace GlProj
@@ -9,9 +9,28 @@ namespace GlProj
 	{
 		class Shader;
 
+		struct VertexAttribute
+		{
+			std::string name;
+			GLenum type;
+			GLint location;
+			GLint size;
+		};
+
+		struct UniformInformation
+		{
+			std::string name;
+			GLenum type;
+			GLint location;
+			GLint size;
+		};
+
 		class ShadingProgram
 		{
 			GLuint programHandle = invalidHandle;
+			std::vector<VertexAttribute> attributes;
+			std::vector<UniformInformation> uniforms;
+
 		public:
 			static const constexpr GLuint invalidHandle = GLuint(-1);
 
@@ -26,6 +45,7 @@ namespace GlProj
 			explicit ShadingProgram(GLuint) noexcept;
 
 			GLuint GetHandle() const noexcept;
+			void FetchProgramInfo();
 		};
 	}
 }

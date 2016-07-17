@@ -1,6 +1,7 @@
 #include "ShadingProgram.hpp"
 #include "gl_core_4_1.h"
 #include "GLFW\glfw3.h"
+#include "Mesh.hpp"
 #include "Shader.hpp"
 #include <algorithm>
 #include <memory>
@@ -94,15 +95,15 @@ namespace GlProj
 			{
 				nameBuf[0] = '\0';
 				GLint size;
-				GLenum type;
+				GLint type;
 				GLint loc;
 				auto idx = GLuint(i);
 				glGetActiveUniformsiv(GetHandle(), 1, &idx, GL_UNIFORM_SIZE, &size);
-				glGetActiveUniformsiv(GetHandle(), 1, &idx, GL_UNIFORM_TYPE, &size);
+				glGetActiveUniformsiv(GetHandle(), 1, &idx, GL_UNIFORM_TYPE, &type);
 				glGetActiveUniformName(GetHandle(), idx, nameLengthMax, nullptr, nameBuf.get());
-				glGetUniformLocation(GetHandle(), nameBuf.get());
+				loc = glGetUniformLocation(GetHandle(), nameBuf.get());
 
-				uniforms.push_back(UniformInformation{nameBuf.get(), type, loc, size});
+				uniforms.push_back(UniformInformation{nameBuf.get(), GLenum(type), loc, size});
 			}
 		}
 	}

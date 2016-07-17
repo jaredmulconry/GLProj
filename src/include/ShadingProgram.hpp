@@ -8,6 +8,8 @@ namespace GlProj
 	namespace Graphics
 	{
 		class Shader;
+		class Mesh;
+		enum MeshSlots;
 
 		struct VertexAttribute
 		{

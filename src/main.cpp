@@ -13,7 +13,32 @@
 #include <stdexcept>
 #include <thread>
 
-using GlProj::Graphics::GetTextureManager;
+using namespace GlProj::Graphics;
+
+void PrepareAndRunGame(GLFWwindow* window)
+{
+	Assimp::Importer importer{};
+	auto bunny = importer.ReadFile("./data/models/bunny.obj", aiProcessPreset_TargetRealtime_Quality);
+	if (bunny == nullptr)
+	{
+		std::string err;
+		err += importer.GetErrorString();
+		throw std::runtime_error(err);
+	}
+
+	GlProj::Graphics::Mesh bunnyMesh{ *bunny->mMeshes };
+
+	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
+
+	while (!glfwWindowShouldClose(window))
+	{
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		glfwSwapBuffers(window);
+
+		glfwPollEvents();
+	}
+}
 
 int main()
 try
@@ -32,7 +57,7 @@ try
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif
 
-	auto win = glfwCreateWindow(800, 600, "Bad Window", nullptr, nullptr);
+	auto win = glfwCreateWindow(1280, 720, "Bad Window", nullptr, nullptr);
 	
 	if (win == nullptr)
 	{
@@ -46,30 +71,9 @@ try
 		return EXIT_FAILURE;
 	}
 
-	Assimp::Importer importer{};
-	auto bunny = importer.ReadFile("./data/models/bunny.obj", aiProcessPreset_TargetRealtime_Fast);
-	if (bunny == nullptr)
-	{
-		std::string err;
-		err += importer.GetErrorString();
-		throw std::runtime_error(err);
-	}
-
-	GlProj::Graphics::Mesh bunnyMesh{*bunny->mMeshes};
-
-	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
-
-	while (!glfwWindowShouldClose(win))
-	{
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		glfwSwapBuffers(win);
-
-		glfwPollEvents();
-	}
+	PrepareAndRunGame(win);
 
 	glfwDestroyWindow(win);
-
 	glfwTerminate();
 }
 catch(std::exception& e)

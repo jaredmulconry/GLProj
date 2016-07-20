@@ -2,6 +2,7 @@
 #include "gl_core_4_1.h"
 #include "GLFW\glfw3.h"
 #include "Texture.hpp"
+#include "Sampler.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include <experimental\filesystem>
@@ -36,7 +37,7 @@ namespace GlProj
 			std::shared_ptr<Texture> FindByName(const std::string& name) const
 			{
 				auto found = registeredTextures.find(name);
-				if (found == registeredTextures.end() || found->second.expired())
+				if (found == registeredTextures.end())
 				{
 					return nullptr;
 				}
@@ -155,6 +156,10 @@ namespace GlProj
 		void ReleaseUnused(TextureManager* manager)
 		{
 			manager->CleanUpDangling();
+		}
+		std::unique_ptr<Sampler> GenerateSampler()
+		{
+			return std::make_unique<Sampler>();
 		}
 	}
 }

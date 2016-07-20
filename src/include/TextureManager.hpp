@@ -9,6 +9,7 @@ namespace GlProj
 	{
 		class TextureManager;
 		class Texture;
+		class Sampler;
 
 		TextureManager* GetTextureManager();
 
@@ -17,5 +18,7 @@ namespace GlProj
 		std::shared_ptr<Texture> FindCachedTextureByPath(const TextureManager*, const std::string&);
 		std::shared_ptr<Texture> FindCachedTextureByName(const TextureManager*, const std::string&);
 		void ReleaseUnused(TextureManager*);
+
+		std::unique_ptr<Sampler> GenerateSampler();
 	}
 }

@@ -3,6 +3,7 @@
 #include "GLFW\glfw3.h"
 #include "Shader.hpp"
 #include "ShadingProgram.hpp"
+#include <algorithm>
 #include <cerrno>
 #include <cstdio>
 #include <experimental\filesystem>
@@ -29,7 +30,7 @@ namespace GlProj
 			std::shared_ptr<Shader> FindByName(const std::string& name) const
 			{
 				auto found = registeredShaders.find(name);
-				if(found == registeredShaders.end() || found->second.expired())
+				if(found == registeredShaders.end())
 				{
 					return nullptr;
 				}

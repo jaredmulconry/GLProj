@@ -20,6 +20,7 @@ endmacro()
 
 #linking and include dependencies
 add_subdirectory(glfw)
+add_subdirectory(glm)
 add_subdirectory(assimp)
 set(STB_SRCS stb/stb.h stb/stb_image.h stb/stb_dxt.h stb/stb_vorbis.c)
 
@@ -31,10 +32,12 @@ add_subdirectory(src)
 add_executable(GLProj ${SRCS} ${STB_SRCS})
 
 target_link_libraries(GLProj glfw)
+target_link_libraries(GLProj glm)
 target_link_libraries(GLProj assimp)
 target_link_libraries(GLProj ${OPENGL_LIBRARIES})
 target_include_directories(GLProj PUBLIC ${OPENGL_INCLUDE_DIR})
 target_include_directories(GLProj PUBLIC stb)
+target_include_directories(GLProj PUBLIC glm/glm)
 target_include_directories(GLProj PUBLIC assimp/include)
 target_include_directories(GLProj PUBLIC src/include)
 

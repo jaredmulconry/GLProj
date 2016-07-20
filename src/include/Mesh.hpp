@@ -55,7 +55,11 @@ namespace GlProj
 			void EnableAttribute(MeshSlots);
 			void DisableAttribute(MeshSlots);
 		public:
+			Mesh() = default;
 			explicit Mesh(const aiMesh*);
+			Mesh(const Mesh&) = delete;
+			Mesh(Mesh&&) = default;
+			Mesh& operator=(Mesh&&) = default;
 
 			const MeshDataBuffer& GetMeshData(MeshSlots) const;
 			void Bind() const noexcept;

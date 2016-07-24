@@ -9,17 +9,26 @@ namespace GlProj
 		class Texture;
 		class Sampler;
 
-		
+		struct MaterialInputBase
+		{
 
-		struct TextureInput
+		};
+
+		template<typename T>
+		struct MaterialInput : public MaterialInputBase
+		{
+			T input;
+		};
+		template<>
+		struct MaterialInput<Texture> : public MaterialInputBase
 		{
 			std::shared_ptr<Texture> texture;
 			std::shared_ptr<Sampler> sampler;
 		};
-		
 
 		class Material
 		{
+			std::shared_ptr<ShadingProgram> program;
 
 		};
 	}

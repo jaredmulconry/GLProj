@@ -29,10 +29,10 @@ namespace GlProj
 
 		class ShadingProgram
 		{
-			GLuint programHandle = invalidHandle;
 			using VertexAttribStorage = std::vector<VertexAttribute>;
 			using UniformInfoStorage = std::vector<UniformInformation>;
 
+			GLuint programHandle = invalidHandle;
 			VertexAttribStorage attributes;
 			UniformInfoStorage uniforms;
 

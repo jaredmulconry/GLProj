@@ -94,7 +94,6 @@ namespace GlProj
 		{
 			return attributes.cend();
 		}
-
 		ShadingProgram::UniformInfoConstIterator ShadingProgram::UniformsEnd() const
 		{
 			return uniforms.cend();

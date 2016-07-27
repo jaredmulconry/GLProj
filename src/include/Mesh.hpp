@@ -27,9 +27,9 @@ namespace GlProj
 			Color1 = Colour1,
 		};
 
-		static const constexpr int MaxTextureCoordinates;
-		static const constexpr int MaxColourChannels;
-		static const constexpr int MaxColorChannels;
+		static const constexpr int MaxTextureCoordinates = 4;
+		static const constexpr int MaxColourChannels = 2;
+		static const constexpr int MaxColorChannels = MaxColourChannels;
 
 		class Mesh
 		{

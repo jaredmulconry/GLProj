@@ -8,10 +8,6 @@ namespace GlProj
 {
 	namespace Graphics
 	{
-		const constexpr int MaxTextureCoordinates(4);
-		const constexpr int MaxColourChannels(2);
-		const constexpr int MaxColorChannels(2);
-
 		Mesh::Mesh(const aiMesh* mesh)
 		{
 			if (!mesh->HasPositions() || !mesh->HasFaces())

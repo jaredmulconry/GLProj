@@ -11,7 +11,6 @@
 #include <exception>
 #include <iostream>
 #include <stdexcept>
-#include <thread>
 
 using namespace GlProj::Graphics;
 

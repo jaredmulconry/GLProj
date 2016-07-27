@@ -1,12 +1,17 @@
 #include "Mesh.hpp"
 #include "assimp\scene.h"
 #include "assimp\anim.h"
+#include <algorithm>
 #include <stdexcept>
 
 namespace GlProj
 {
 	namespace Graphics
 	{
+		const constexpr int MaxTextureCoordinates(4);
+		const constexpr int MaxColourChannels(2);
+		const constexpr int MaxColorChannels(2);
+
 		Mesh::Mesh(const aiMesh* mesh)
 		{
 			if (!mesh->HasPositions() || !mesh->HasFaces())
@@ -55,7 +60,7 @@ namespace GlProj
 				EnableAttribute(MeshSlots::BiTangents);
 				SetAttributePointer(MeshSlots::BiTangents);
 			}
-			int uvChannelCount = static_cast<int>(mesh->GetNumUVChannels());
+			int uvChannelCount = std::min(static_cast<int>(mesh->GetNumUVChannels()), MaxTextureCoordinates);
 			for (int i = 0; i < uvChannelCount; ++i)
 			{
 				if (mesh->HasTextureCoords(i))
@@ -64,12 +69,12 @@ namespace GlProj
 						mesh->mNumVertices * mesh->mNumUVComponents[i],
 						mesh->mTextureCoords[i],
 						GL_FLOAT,
-						3);
+						mesh->mNumUVComponents[i]);
 					EnableAttribute(MeshSlots(MeshSlots::TexCoord0 + i));
 					SetAttributePointer(MeshSlots(MeshSlots::TexCoord0 + i));
 				}
 			}
-			int colourChannelCount = static_cast<int>(mesh->GetNumColorChannels());
+			int colourChannelCount = std::min(static_cast<int>(mesh->GetNumColorChannels()), MaxColourChannels);
 			for (int i = 0; i < colourChannelCount; ++i)
 			{
 				if (mesh->HasVertexColors(i))

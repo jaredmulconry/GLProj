@@ -57,6 +57,49 @@ namespace GlProj
 		{
 			return programHandle;
 		}
+		ShadingProgram::VertexAttribConstIterator ShadingProgram::FindAttribute(const std::string& name) const
+		{
+			return std::find_if(attributes.cbegin(), attributes.cend(), [&name](const auto& x)
+			{
+				return name == x.name;
+			});
+		}
+		ShadingProgram::VertexAttribConstIterator ShadingProgram::FindAttribute(GLint loc) const
+		{
+			return std::find_if(attributes.cbegin(), attributes.cend(), [&loc](const auto& x)
+			{
+				return loc == x.location;
+			});
+		}
+		ShadingProgram::VertexAttribConstIterator ShadingProgram::FindAttribute(MeshSlots slot) const
+		{
+			return FindAttribute(GLint{ slot });
+		}
+		ShadingProgram::UniformInfoConstIterator ShadingProgram::FindUniform(const std::string& name) const
+		{
+			return std::find_if(uniforms.cbegin(), uniforms.cend(), [&name](const auto& x)
+			{
+				return name == x.name;
+			});
+		}
+		ShadingProgram::UniformInfoConstIterator ShadingProgram::FindUniform(GLint loc) const
+		{
+			return std::find_if(uniforms.cbegin(), uniforms.cend(), [&loc](const auto& x)
+			{
+				return loc == x.location;
+			});
+		}
+
+		ShadingProgram::VertexAttribConstIterator ShadingProgram::AttributesEnd() const
+		{
+			return attributes.cend();
+		}
+
+		ShadingProgram::UniformInfoConstIterator ShadingProgram::UniformsEnd() const
+		{
+			return uniforms.cend();
+		}
+
 		void ShadingProgram::Bind() const noexcept
 		{
 			glUseProgram(GetHandle());

@@ -25,7 +25,20 @@ namespace GlProj
 			void SetUniform(const UniformInformation&, const glm::vec2&);
 			void SetUniform(const UniformInformation&, const glm::vec3&);
 			void SetUniform(const UniformInformation&, const glm::vec4&);
-			void SetUniform(const UniformInformation&, int);
+			void SetUniform(const UniformInformation&, const glm::mat2&);
+			void SetUniform(const UniformInformation&, const glm::mat3&);
+			void SetUniform(const UniformInformation&, const glm::mat4&);
+			void SetUniform(const UniformInformation&, const Texture&, const Sampler* = nullptr);
+
+			void SetUniform(const UniformInformation&, const GLint*, int);
+			void SetUniform(const UniformInformation&, const GLfloat*, int);
+			void SetUniform(const UniformInformation&, const glm::vec2*, int);
+			void SetUniform(const UniformInformation&, const glm::vec3*, int);
+			void SetUniform(const UniformInformation&, const glm::vec4*, int);
+			void SetUniform(const UniformInformation&, const glm::mat2*, int);
+			void SetUniform(const UniformInformation&, const glm::mat3*, int);
+			void SetUniform(const UniformInformation&, const glm::mat4*, int);
+			void SetUniform(const UniformInformation&, const Texture*, int, const Sampler** = nullptr);
 		};
 	}
 }

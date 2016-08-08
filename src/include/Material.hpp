@@ -12,6 +12,21 @@ namespace GlProj
 		class Sampler;
 		struct UniformInformation;
 
+		enum class TextureSlot : GLenum
+		{
+			Diffuse1,
+			Diffuse2,
+			Normal,
+			Specular,
+			Emissive,
+			Gloss,
+			Displacement,
+			Opacity,
+			User,
+		};
+
+		GLenum TextureSlotToGL(TextureSlot s);
+
 		class Material
 		{
 			std::shared_ptr<ShadingProgram> program;
@@ -28,7 +43,8 @@ namespace GlProj
 			void SetUniform(const UniformInformation&, const glm::mat2&);
 			void SetUniform(const UniformInformation&, const glm::mat3&);
 			void SetUniform(const UniformInformation&, const glm::mat4&);
-			void SetUniform(const UniformInformation&, const Texture&, const Sampler* = nullptr);
+			void SetUniform(const UniformInformation&, const Texture&, TextureSlot);
+
 
 			void SetUniform(const UniformInformation&, const GLint*, int);
 			void SetUniform(const UniformInformation&, const GLfloat*, int);
@@ -38,7 +54,7 @@ namespace GlProj
 			void SetUniform(const UniformInformation&, const glm::mat2*, int);
 			void SetUniform(const UniformInformation&, const glm::mat3*, int);
 			void SetUniform(const UniformInformation&, const glm::mat4*, int);
-			void SetUniform(const UniformInformation&, const Texture*, int, const Sampler** = nullptr);
+			void SetUniform(const UniformInformation&, const Texture*, int);
 		};
 	}
 }

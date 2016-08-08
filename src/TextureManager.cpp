@@ -95,6 +95,11 @@ namespace GlProj
 				throw std::runtime_error(err);
 			}
 
+			GLenum textureDimensions = GL_TEXTURE_2D;
+			if(height == 1)
+			{
+				textureDimensions = GL_TEXTURE_1D;
+			}
 			GLint internalFormat, externalFormat;
 
 			switch (components)
@@ -122,11 +127,18 @@ namespace GlProj
 			GLuint handle;
 			glGenTextures(1, &handle);
 
-			glBindTexture(GL_TEXTURE_2D, handle);
+			glBindTexture(textureDimensions, handle);
 
-			glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, externalFormat, GL_UNSIGNED_BYTE, pixelData.get());
+			if(textureDimensions == GL_TEXTURE_2D)
+			{
+				glTexImage2D(textureDimensions, 0, internalFormat, width, height, 0, externalFormat, GL_UNSIGNED_BYTE, pixelData.get());
+			}
+			else
+			{
+				glTexImage1D(textureDimensions, 0, internalFormat, width, 0, externalFormat, GL_UNSIGNED_BYTE, pixelData.get());
+			}
 
-			return manager->RegisterTexture(GL_TEXTURE_2D, handle, canonical(path).u8string());
+			return manager->RegisterTexture(textureDimensions, handle, canonical(path).u8string());
 		}
 		std::shared_ptr<Texture> RegisterTexture(TextureManager* manager, GLenum type, GLuint handle, const std::string& name, bool replace)
 		{

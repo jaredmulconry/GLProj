@@ -20,7 +20,7 @@ namespace GlProj
 
 			vertexData.resize(ReservedVertexSlots);
 
-			vertexData[MeshSlots::Positions] = MeshDataBuffer(GL_ARRAY_BUFFER,
+			vertexData[MeshSlotToGL(MeshSlots::Positions)] = MeshDataBuffer(GL_ARRAY_BUFFER,
 				mesh->mNumVertices * sizeof(*mesh->mVertices),
 				mesh->mVertices,
 				GL_FLOAT,
@@ -30,7 +30,7 @@ namespace GlProj
 
 			if (mesh->HasNormals())
 			{
-				vertexData[MeshSlots::Normals] = MeshDataBuffer(GL_ARRAY_BUFFER,
+				vertexData[MeshSlotToGL(MeshSlots::Normals)] = MeshDataBuffer(GL_ARRAY_BUFFER,
 					mesh->mNumVertices * sizeof(*mesh->mNormals),
 					mesh->mNormals,
 					GL_FLOAT,
@@ -40,7 +40,7 @@ namespace GlProj
 			}
 			if (mesh->HasTangentsAndBitangents())
 			{
-				vertexData[MeshSlots::Tangents] = MeshDataBuffer(GL_ARRAY_BUFFER,
+				vertexData[MeshSlotToGL(MeshSlots::Tangents)] = MeshDataBuffer(GL_ARRAY_BUFFER,
 					mesh->mNumVertices * sizeof(*mesh->mTangents),
 					mesh->mTangents,
 					GL_FLOAT,
@@ -48,7 +48,7 @@ namespace GlProj
 				EnableAttribute(MeshSlots::Tangents);
 				SetAttributePointer(MeshSlots::Tangents);
 
-				vertexData[MeshSlots::BiTangents] = MeshDataBuffer(GL_ARRAY_BUFFER,
+				vertexData[MeshSlotToGL(MeshSlots::BiTangents)] = MeshDataBuffer(GL_ARRAY_BUFFER,
 					mesh->mNumVertices * sizeof(*mesh->mBitangents),
 					mesh->mBitangents,
 					GL_FLOAT,
@@ -61,13 +61,13 @@ namespace GlProj
 			{
 				if (mesh->HasTextureCoords(i))
 				{
-					vertexData[MeshSlots::TexCoord0 + i] = MeshDataBuffer(GL_ARRAY_BUFFER,
+					vertexData[MeshSlotToGL(MeshSlots::TexCoord0) + i] = MeshDataBuffer(GL_ARRAY_BUFFER,
 						mesh->mNumVertices * mesh->mNumUVComponents[i],
 						mesh->mTextureCoords[i],
 						GL_FLOAT,
 						mesh->mNumUVComponents[i]);
-					EnableAttribute(MeshSlots(MeshSlots::TexCoord0 + i));
-					SetAttributePointer(MeshSlots(MeshSlots::TexCoord0 + i));
+					EnableAttribute(MeshSlots(MeshSlotToGL(MeshSlots::TexCoord0) + i));
+					SetAttributePointer(MeshSlots(MeshSlotToGL(MeshSlots::TexCoord0) + i));
 				}
 			}
 			int colourChannelCount = std::min(static_cast<int>(mesh->GetNumColorChannels()), MaxColourChannels);
@@ -75,20 +75,20 @@ namespace GlProj
 			{
 				if (mesh->HasVertexColors(i))
 				{
-					vertexData[MeshSlots::Colour0 + i] = MeshDataBuffer(GL_ARRAY_BUFFER,
+					vertexData[MeshSlotToGL(MeshSlots::Colour0) + i] = MeshDataBuffer(GL_ARRAY_BUFFER,
 						mesh->mNumVertices * sizeof(*mesh->mColors),
 						mesh->mColors[i],
 						GL_FLOAT,
 						4);
-					EnableAttribute(MeshSlots(MeshSlots::Colour0 + i));
-					SetAttributePointer(MeshSlots(MeshSlots::Colour0 + i));
+					EnableAttribute(MeshSlots(MeshSlotToGL(MeshSlots::Colour0) + i));
+					SetAttributePointer(MeshSlots(MeshSlotToGL(MeshSlots::Colour0) + i));
 				}
 			}
 		}
 
 		const MeshDataBuffer& Mesh::GetMeshData(MeshSlots s) const
 		{
-			return vertexData[s];
+			return vertexData[MeshSlotToGL(s)];
 		}
 		void Mesh::Bind() const noexcept
 		{
@@ -105,16 +105,21 @@ namespace GlProj
 			Bind();
 			meshData.Bind();
 
-			glVertexAttribPointer(slot, meshData.GetElementsPerVertex(),
+			glVertexAttribPointer(MeshSlotToGL(slot), meshData.GetElementsPerVertex(),
 				meshData.GetDataType(), GL_FALSE, 0, nullptr);
 		}
 		void Mesh::EnableAttribute(MeshSlots s)
 		{
-			glEnableVertexAttribArray(s);
+			glEnableVertexAttribArray(MeshSlotToGL(s));
 		}
 		void Mesh::DisableAttribute(MeshSlots s)
 		{
-			glDisableVertexAttribArray(s);
+			glDisableVertexAttribArray(MeshSlotToGL(s));
+		}
+
+		GLenum MeshSlotToGL(MeshSlots s)
+		{
+			return static_cast<GLuint>(s);
 		}
 
 		bool operator==(const Mesh& x, const Mesh& y) noexcept

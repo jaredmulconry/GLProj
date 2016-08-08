@@ -73,7 +73,7 @@ namespace GlProj
 		}
 		ShadingProgram::VertexAttribConstIterator ShadingProgram::FindAttribute(MeshSlots slot) const
 		{
-			return FindAttribute(GLint{ slot });
+			return FindAttribute(MeshSlotToGL(slot));
 		}
 		ShadingProgram::UniformInfoConstIterator ShadingProgram::FindUniform(const std::string& name) const
 		{

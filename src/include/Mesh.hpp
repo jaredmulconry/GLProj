@@ -11,7 +11,7 @@ namespace GlProj
 {
 	namespace Graphics
 	{
-		enum MeshSlots
+		enum class MeshSlots : GLenum
 		{
 			Positions,
 			Normals,
@@ -25,7 +25,10 @@ namespace GlProj
 			Color0 = Colour0,
 			Colour1,
 			Color1 = Colour1,
+			User,
 		};
+
+		GLenum MeshSlotToGL(MeshSlots s);
 
 		static const constexpr int MaxTextureCoordinates = 4;
 		static const constexpr int MaxColourChannels = 2;

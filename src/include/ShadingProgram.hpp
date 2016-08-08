@@ -9,7 +9,7 @@ namespace GlProj
 	{
 		class Shader;
 		class Mesh;
-		enum MeshSlots;
+		enum class MeshSlots : GLuint;
 
 		struct VertexAttribute
 		{

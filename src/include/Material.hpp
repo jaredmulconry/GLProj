@@ -12,7 +12,7 @@ namespace GlProj
 		class Sampler;
 		struct UniformInformation;
 
-		enum class TextureSlot : GLenum
+		enum class TextureSlot : GLint
 		{
 			Diffuse1,
 			Diffuse2,
@@ -25,7 +25,7 @@ namespace GlProj
 			User,
 		};
 
-		GLenum TextureSlotToGL(TextureSlot s);
+		GLint TextureSlotToGL(TextureSlot s);
 
 		class Material
 		{
@@ -43,7 +43,6 @@ namespace GlProj
 			void SetUniform(const UniformInformation&, const glm::mat2&);
 			void SetUniform(const UniformInformation&, const glm::mat3&);
 			void SetUniform(const UniformInformation&, const glm::mat4&);
-			void SetUniform(const UniformInformation&, const Texture&, TextureSlot);
 
 
 			void SetUniform(const UniformInformation&, const GLint*, int);
@@ -54,7 +53,6 @@ namespace GlProj
 			void SetUniform(const UniformInformation&, const glm::mat2*, int);
 			void SetUniform(const UniformInformation&, const glm::mat3*, int);
 			void SetUniform(const UniformInformation&, const glm::mat4*, int);
-			void SetUniform(const UniformInformation&, const Texture*, int);
 		};
 	}
 }

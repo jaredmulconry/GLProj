@@ -16,7 +16,7 @@
 #include <type_traits>
 
 template<typename T>
-using remove_cvr = std::remove_const_t<std::remove_reference_t<T>>;
+using remove_cvrp = std::remove_const_t<std::remove_pointer_t<std::remove_reference_t<T>>>;
 
 static const constexpr bool enable_gl_type_validation = false;
 
@@ -36,6 +36,39 @@ void ValidateType<GLint>(const GlProj::Graphics::UniformInformation& t)
 		GL_BOOL_VEC2,
 		GL_BOOL_VEC3,
 		GL_BOOL_VEC4,
+		GL_SAMPLER_1D,
+		GL_SAMPLER_2D,
+		GL_SAMPLER_3D,
+		GL_SAMPLER_CUBE,
+		GL_SAMPLER_1D_SHADOW,
+		GL_SAMPLER_2D_SHADOW,
+		GL_SAMPLER_1D_ARRAY,
+		GL_SAMPLER_2D_ARRAY,
+		GL_SAMPLER_1D_ARRAY_SHADOW,
+		GL_SAMPLER_2D_ARRAY_SHADOW,
+		GL_SAMPLER_2D_MULTISAMPLE,
+		GL_SAMPLER_2D_MULTISAMPLE_ARRAY,
+		GL_SAMPLER_CUBE_SHADOW,
+		GL_SAMPLER_BUFFER,
+		GL_SAMPLER_2D_RECT,
+		GL_SAMPLER_2D_RECT_SHADOW,
+		GL_INT_SAMPLER_CUBE,
+		GL_INT_SAMPLER_1D_ARRAY,
+		GL_INT_SAMPLER_2D_ARRAY,
+		GL_INT_SAMPLER_2D_MULTISAMPLE,
+		GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY,
+		GL_INT_SAMPLER_BUFFER,
+		GL_INT_SAMPLER_2D_RECT,
+		GL_UNSIGNED_INT_SAMPLER_1D,
+		GL_UNSIGNED_INT_SAMPLER_2D,
+		GL_UNSIGNED_INT_SAMPLER_3D,
+		GL_UNSIGNED_INT_SAMPLER_CUBE,
+		GL_UNSIGNED_INT_SAMPLER_1D_ARRAY,
+		GL_UNSIGNED_INT_SAMPLER_2D_ARRAY,
+		GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE,
+		GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY,
+		GL_UNSIGNED_INT_SAMPLER_BUFFER,
+		GL_UNSIGNED_INT_SAMPLER_2D_RECT,
 	};
 
 	static std::once_flag sortFlg;
@@ -233,61 +266,21 @@ void ValidateType<glm::mat4>(const GlProj::Graphics::UniformInformation& t)
 		throw std::logic_error(err);
 	}
 }
-template<>
-void ValidateType<GlProj::Graphics::Texture>(const GlProj::Graphics::UniformInformation& t)
-{
-	static GLenum ValidTypes[] =
-	{
-		GL_SAMPLER_1D,
-		GL_SAMPLER_2D,
-		GL_SAMPLER_3D,
-		GL_SAMPLER_CUBE,
-		GL_SAMPLER_1D_SHADOW,
-		GL_SAMPLER_2D_SHADOW,
-		GL_SAMPLER_1D_ARRAY,
-		GL_SAMPLER_2D_ARRAY,
-		GL_SAMPLER_1D_ARRAY_SHADOW,
-		GL_SAMPLER_2D_ARRAY_SHADOW,
-		GL_SAMPLER_2D_MULTISAMPLE,
-		GL_SAMPLER_2D_MULTISAMPLE_ARRAY,
-		GL_SAMPLER_CUBE_SHADOW,
-		GL_SAMPLER_BUFFER,
-		GL_SAMPLER_2D_RECT,
-		GL_SAMPLER_2D_RECT_SHADOW,
-		GL_INT_SAMPLER_CUBE,
-		GL_INT_SAMPLER_1D_ARRAY,
-		GL_INT_SAMPLER_2D_ARRAY,
-		GL_INT_SAMPLER_2D_MULTISAMPLE,
-		GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY,
-		GL_INT_SAMPLER_BUFFER,
-		GL_INT_SAMPLER_2D_RECT,
-		GL_UNSIGNED_INT_SAMPLER_1D,
-		GL_UNSIGNED_INT_SAMPLER_2D,
-		GL_UNSIGNED_INT_SAMPLER_3D,
-		GL_UNSIGNED_INT_SAMPLER_CUBE,
-		GL_UNSIGNED_INT_SAMPLER_1D_ARRAY,
-		GL_UNSIGNED_INT_SAMPLER_2D_ARRAY,
-		GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE,
-		GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY,
-		GL_UNSIGNED_INT_SAMPLER_BUFFER,
-		GL_UNSIGNED_INT_SAMPLER_2D_RECT,
-	};
 
-	static std::once_flag sortFlg;
-	std::call_once(sortFlg, [&]()
+void ValidateBounds(const GlProj::Graphics::UniformInformation& t, int s)
+{
+	if(t.size < s)
 	{
-		std::sort(std::begin(ValidTypes), std::end(ValidTypes));
-	});
-	if(!std::binary_search(std::begin(ValidTypes), std::end(ValidTypes), t.type))
-	{
-		std::string err = "Type mismatch on shader uniform \"" + t.name
-			+ "\": \n Actual type: ";
+		std::string err = "Uniform access out of bounds.\nUniform name: " + t.name
+			+ "\nType: ";
 		err += t.type;
-		err += "\n Provided type: Texture";
-		throw std::logic_error(err);
+		err += "\nSize: ";
+		err += t.size;
+		err += "\nInput size: ";
+		err += s;
+		throw std::out_of_range(err);
 	}
 }
-
 
 namespace GlProj
 {
@@ -295,64 +288,114 @@ namespace GlProj
 	{
 		void Material::SetUniform(const UniformInformation& u, GLint i)
 		{
-			if(enable_gl_type_validation)
-				ValidateType<decltype(i)>(u);
-			
-			glUniform1iv(u.location, 1, &i);
+			SetUniform(u, &i, 1);
 		}
 		void Material::SetUniform(const UniformInformation& u, GLfloat f)
 		{
-			if(enable_gl_type_validation)
-				ValidateType<decltype(f)>(u);
-
-			glUniform1fv(u.location, 1, &f);
+			SetUniform(u, &f, 1);
 		}
 		void Material::SetUniform(const UniformInformation& u, const glm::vec2& v)
 		{
-			ValidateType<remove_cvr<decltype(v)>>(u);
-
-			glUniform2fv(u.location, 1, glm::value_ptr(v));
+			SetUniform(u, &v, 1);
 		}
 		void Material::SetUniform(const UniformInformation& u, const glm::vec3& v)
 		{
-			ValidateType<remove_cvr<decltype(v)>>(u);
-
-			glUniform3fv(u.location, 1, glm::value_ptr(v));
+			SetUniform(u, &v, 1);
 		}
 		void Material::SetUniform(const UniformInformation& u, const glm::vec4& v)
 		{
-			ValidateType<remove_cvr<decltype(v)>>(u);
-
-			glUniform4fv(u.location, 1, glm::value_ptr(v));
+			SetUniform(u, &v, 1);
 		}
 		void Material::SetUniform(const UniformInformation& u, const glm::mat2& m)
 		{
-			ValidateType<remove_cvr<decltype(m)>>(u);
-
-			glUniformMatrix2fv(u.location, 1, false, glm::value_ptr(m));
+			SetUniform(u, &m, 1);
 		}
 		void Material::SetUniform(const UniformInformation& u, const glm::mat3& m)
 		{
-			ValidateType<remove_cvr<decltype(m)>>(u);
-
-			glUniformMatrix2fv(u.location, 1, false, glm::value_ptr(m));
+			SetUniform(u, &m, 1);
 		}
 		void Material::SetUniform(const UniformInformation& u, const glm::mat4& m)
 		{
-			ValidateType<remove_cvr<decltype(m)>>(u);
-
-			glUniformMatrix2fv(u.location, 1, false, glm::value_ptr(m));
+			SetUniform(u, &m, 1);
 		}
-		void Material::SetUniform(const UniformInformation& u, const Texture& t, TextureSlot s)
-		{
-			ValidateType<remove_cvr<decltype(t)>>(u);
 
-			int slot = int(TextureSlotToGL(s));
-			glUniform1iv(u.location, 1, &slot);
-		}
-		GLenum TextureSlotToGL(TextureSlot s)
+		void Material::SetUniform(const UniformInformation& u, const GLint* i, int s)
 		{
-			return static_cast<GLenum>(s);
+			if(enable_gl_type_validation)
+			{
+				ValidateType<remove_cvrp<decltype(i)>>(u);
+				ValidateBounds(u, s);
+			}
+
+			glUniform1iv(u.location, s, i);
+		}
+		void Material::SetUniform(const UniformInformation& u, const GLfloat* f, int s)
+		{
+			if(enable_gl_type_validation)
+			{
+				ValidateType<remove_cvrp<decltype(f)>>(u);
+				ValidateBounds(u, s);
+			}
+
+			glUniform1fv(u.location, s, f);
+		}
+		void Material::SetUniform(const UniformInformation& u, const glm::vec2* v, int s)
+		{
+			if(enable_gl_type_validation)
+			{
+				ValidateType<remove_cvrp<decltype(v)>>(u);
+				ValidateBounds(u, s);
+			}
+			glUniform2fv(u.location, s, reinterpret_cast<const GLfloat*>(v));
+		}
+		void Material::SetUniform(const UniformInformation& u, const glm::vec3* v, int s)
+		{
+			if(enable_gl_type_validation)
+			{
+				ValidateType<remove_cvrp<decltype(v)>>(u);
+				ValidateBounds(u, s);
+			}
+			glUniform3fv(u.location, s, reinterpret_cast<const GLfloat*>(v));
+		}
+		void Material::SetUniform(const UniformInformation& u, const glm::vec4* v, int s)
+		{
+			if(enable_gl_type_validation)
+			{
+				ValidateType<remove_cvrp<decltype(v)>>(u);
+				ValidateBounds(u, s);
+			}
+			glUniform4fv(u.location, s, reinterpret_cast<const GLfloat*>(v));
+		}
+		void Material::SetUniform(const UniformInformation& u, const glm::mat2* m, int s)
+		{
+			if(enable_gl_type_validation)
+			{
+				ValidateType<remove_cvrp<decltype(m)>>(u);
+				ValidateBounds(u, s);
+			}
+			glUniformMatrix2fv(u.location, s, GL_FALSE, reinterpret_cast<const GLfloat*>(m));
+		}
+		void Material::SetUniform(const UniformInformation& u, const glm::mat3* m, int s)
+		{
+			if(enable_gl_type_validation)
+			{
+				ValidateType<remove_cvrp<decltype(m)>>(u);
+				ValidateBounds(u, s);
+			}
+			glUniformMatrix3fv(u.location, s, GL_FALSE, reinterpret_cast<const GLfloat*>(m));
+		}
+		void Material::SetUniform(const UniformInformation& u, const glm::mat4* m, int s)
+		{
+			if(enable_gl_type_validation)
+			{
+				ValidateType<remove_cvrp<decltype(m)>>(u);
+				ValidateBounds(u, s);
+			}
+			glUniformMatrix4fv(u.location, s, GL_FALSE, reinterpret_cast<const GLfloat*>(m));
+		}
+		GLint TextureSlotToGL(TextureSlot s)
+		{
+			return static_cast<GLint>(s);
 		}
 	}
 }

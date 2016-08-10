@@ -33,7 +33,9 @@ namespace GlProj
 			
 		public:
 			Material() noexcept = default;
+			explicit Material(const std::shared_ptr<ShadingProgram>&);
 
+			Material& operator=(const std::shared_ptr<ShadingProgram>&);
 
 			void SetUniform(const UniformInformation&, GLint);
 			void SetUniform(const UniformInformation&, GLuint);

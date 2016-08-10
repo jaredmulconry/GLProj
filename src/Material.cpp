@@ -316,6 +316,15 @@ namespace GlProj
 {
 	namespace Graphics
 	{
+		Material::Material(const std::shared_ptr<ShadingProgram>& p)
+			:program(p)
+		{}
+		Material& Material::operator=(const std::shared_ptr<ShadingProgram>& p)
+		{
+			program = p;
+
+			return *this;
+		}
 		void Material::SetUniform(const UniformInformation& u, GLint i)
 		{
 			SetUniform(u, &i, 1);

@@ -87,6 +87,36 @@ void ValidateType<GLint>(const GlProj::Graphics::UniformInformation& t)
 	}
 }
 template<>
+void ValidateType<GLuint>(const GlProj::Graphics::UniformInformation& t)
+{
+	static GLenum ValidTypes[] =
+	{
+		GL_UNSIGNED_INT,
+		GL_UNSIGNED_INT_VEC2,
+		GL_UNSIGNED_INT_VEC3,
+		GL_UNSIGNED_INT_VEC4,
+		GL_BOOL,
+		GL_BOOL_VEC2,
+		GL_BOOL_VEC3,
+		GL_BOOL_VEC4,
+	};
+
+	static std::once_flag sortFlg;
+	std::call_once(sortFlg, [&]()
+	{
+		std::sort(std::begin(ValidTypes), std::end(ValidTypes));
+	});
+
+	if(!std::binary_search(std::begin(ValidTypes), std::end(ValidTypes), t.type))
+	{
+		std::string err = "Type mismatch on shader uniform \"" + t.name
+			+ "\": \n Actual type: ";
+		err += t.type;
+		err += "\n Provided type: GLuint";
+		throw std::logic_error(err);
+	}
+}
+template<>
 void ValidateType<GLfloat>(const GlProj::Graphics::UniformInformation& t)
 {
 	static GLenum ValidTypes[] =
@@ -290,6 +320,10 @@ namespace GlProj
 		{
 			SetUniform(u, &i, 1);
 		}
+		void Material::SetUniform(const UniformInformation& u, GLuint ui)
+		{
+			SetUniform(u, &ui, 1);
+		}
 		void Material::SetUniform(const UniformInformation& u, GLfloat f)
 		{
 			SetUniform(u, &f, 1);
@@ -328,6 +362,16 @@ namespace GlProj
 			}
 
 			glUniform1iv(u.location, s, i);
+		}
+		void Material::SetUniform(const UniformInformation& u, const GLuint* ui, int s)
+		{
+			if(enable_gl_type_validation)
+			{
+				ValidateType<remove_cvrp<decltype(ui)>>(u);
+				ValidateBounds(u, s);
+			}
+
+			glUniform1uiv(u.location, s, ui);
 		}
 		void Material::SetUniform(const UniformInformation& u, const GLfloat* f, int s)
 		{

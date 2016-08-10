@@ -36,6 +36,7 @@ namespace GlProj
 
 
 			void SetUniform(const UniformInformation&, GLint);
+			void SetUniform(const UniformInformation&, GLuint);
 			void SetUniform(const UniformInformation&, GLfloat);
 			void SetUniform(const UniformInformation&, const glm::vec2&);
 			void SetUniform(const UniformInformation&, const glm::vec3&);
@@ -46,6 +47,7 @@ namespace GlProj
 
 
 			void SetUniform(const UniformInformation&, const GLint*, int);
+			void SetUniform(const UniformInformation&, const GLuint*, int);
 			void SetUniform(const UniformInformation&, const GLfloat*, int);
 			void SetUniform(const UniformInformation&, const glm::vec2*, int);
 			void SetUniform(const UniformInformation&, const glm::vec3*, int);

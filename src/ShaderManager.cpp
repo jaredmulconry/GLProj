@@ -169,18 +169,9 @@ namespace GlProj
 			manager->CleanUpDangling();
 		}
 		
-		std::unique_ptr<ShadingProgram> GenerateProgram()
+		std::shared_ptr<ShadingProgram> GenerateProgram()
 		{
-			return std::make_unique<ShadingProgram>(glCreateProgram());
-		}
-		std::unique_ptr<ShadingProgram> GenerateProgram(std::initializer_list<const std::shared_ptr<Shader>> shaders)
-		{
-			auto prog = GenerateProgram();
-			for (auto& s : shaders)
-			{
-				AttachShader(prog.get(), s.get());
-			}
-			return prog;
+			return std::make_shared<ShadingProgram>(glCreateProgram());
 		}
 		void AttachShader(ShadingProgram* program, Shader* shader)
 		{

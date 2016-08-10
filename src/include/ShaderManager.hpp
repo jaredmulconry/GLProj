@@ -22,8 +22,7 @@ namespace GlProj
 
 		void ReleaseUnused(ShaderManager*);
 
-		std::unique_ptr<ShadingProgram> GenerateProgram();
-		std::unique_ptr<ShadingProgram> GenerateProgram(std::initializer_list<const std::shared_ptr<Shader>>);
+		std::shared_ptr<ShadingProgram> GenerateProgram();
 		void AttachShader(ShadingProgram*, Shader*);
 		void DetachShader(ShadingProgram*, Shader*);
 		void LinkProgram(ShadingProgram*);

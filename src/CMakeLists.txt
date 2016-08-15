@@ -16,5 +16,6 @@ add_sources(include/ShadingProgram.hpp ShadingProgram.cpp)
 add_sources(include/Model.hpp Model.cpp)
 add_sources(include/MeshManager.hpp MeshManager.cpp)
 add_sources(include/Material.hpp Material.cpp)
+add_sources(include/LocalSharedPtr.hpp LocalSharedPtr.cpp)
 
 #file(COPY ./data/ DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/data)

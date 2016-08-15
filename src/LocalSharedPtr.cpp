@@ -11,6 +11,11 @@ namespace GlProj
 
 			(void)(t1 != t2);
 
+			t2 = t1;
+			t2 = std::move(t1);
+			t1 = make_localshared<int>();
+			auto ptr = t1.get();
+			*ptr = 321;
 		}
 	}
 }

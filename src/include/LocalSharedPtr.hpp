@@ -145,6 +145,11 @@ namespace GlProj
 				}
 			}
 
+			explicit operator T*() const
+			{
+				return objRef;
+			}
+
 			template<typename... Us>
 			explicit LocalSharedPtr(detail::MakeFromFunc, Us&&... values)
 			{
@@ -179,6 +184,27 @@ namespace GlProj
 				return *this;
 			}
 
+			T* get()
+			{
+				return objRef;
+			}
+			const T* get() const
+			{
+				return objRef;
+			}
+
+			void reset()
+			{
+				Decrement();
+				objRef = nullptr;
+				ref = nullptr;
+			}
+			void reset(T* ptr)
+			{
+				Decrement();
+				AllocateControl(ptr);
+			}
+
 			friend bool operator==(const LocalSharedPtr& x,
 				const LocalSharedPtr& y)
 			{
@@ -199,6 +225,14 @@ namespace GlProj
 				const T* p)
 			{
 				return !(x == p)
+			}
+			friend bool operator==(const T* p, const LocalSharedPtr& x)
+			{
+				return x == p;
+			}
+			friend bool operator!=(const T* p, const LocalSharedPtr& x)
+			{
+				return !(p == x)
 			}
 		};
 

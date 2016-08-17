@@ -1,5 +1,7 @@
 #pragma once
 #include <cstddef>
+#include <functional>
+#include <type_traits>
 #include <utility>
 
 namespace GlProj
@@ -62,33 +64,49 @@ namespace GlProj
 					objRef = nullptr;
 				}
 			}
+
+			void InternalReset()
+			{
+				InternalReset(nullptr, nullptr);
+			}
+			void InternalReset(T* d, detail::RefBase* rc)
+			{
+				Decrement();
+
+				ref = rc;
+				objRef = d;
+			}
+
 			void AllocateControl(const T& x)
 			{
 				auto reference = new detail::RefSeparated<T>;
 				reference->data = new T(x);
-				ref = reference;
-				objRef = reference->data;
+				InternalReset(reference->data, reference);
 			}
 			void AllocateControl(T&& x)
 			{
 				auto reference = new detail::RefSeparated<T>;
 				reference->data = new T(std::move(x));
-				ref = reference;
-				objRef = reference->data;
+				InternalReset(reference->data, reference);
 			}
 			void AllocateControl(T* x)
 			{
-				auto reference = new detail::RefSeparated<T>;
-				reference->data = x;
-				ref = reference;
-				objRef = reference->data;
+				if (x == nullptr)
+				{
+					InternalReset();
+				}
+				else
+				{
+					auto reference = new detail::RefSeparated<T>;
+					reference->data = x;
+					InternalReset(reference->data, reference);
+				}
 			}
 			template<typename... Us>
 			void AllocateControlFromArgs(Us&&... values)
 			{
 				auto reference = new detail::RefJoined<T>(std::forward<Us>(values)...);
-				ref = reference;
-				objRef = &(reference->data);
+				InternalReset(&(reference->data), reference);
 			}
 		public:
 			LocalSharedPtr() noexcept
@@ -96,7 +114,7 @@ namespace GlProj
 			{}
 			LocalSharedPtr(const LocalSharedPtr& x)
 				:ref(x.ref)
-				,objRef(x.objRef)
+				, objRef(x.objRef)
 			{
 				Increment();
 			}
@@ -104,10 +122,7 @@ namespace GlProj
 			{
 				if (x.ref != ref)
 				{
-					Decrement();
-					
-					ref = x.ref;
-					objRef = x.objRef;
+					InternalReset(x.objRef, x.ref);
 
 					Increment();
 				}
@@ -116,7 +131,7 @@ namespace GlProj
 			}
 			LocalSharedPtr(LocalSharedPtr&& x) noexcept
 				:ref(x.ref)
-				,objRef(x.objRef)
+				, objRef(x.objRef)
 			{
 				x.ref = nullptr;
 				x.objRef = nullptr;
@@ -125,10 +140,7 @@ namespace GlProj
 			{
 				if (x.ref != ref)
 				{
-					Decrement();
-
-					ref = x.ref;
-					objRef = x.objRef;
+					InternalReset(x.objRef, x.ref);
 
 					x.ref = nullptr;
 					x.objRef = nullptr;
@@ -138,16 +150,7 @@ namespace GlProj
 			}
 			~LocalSharedPtr()
 			{
-				--ref->ref_count;
-				if (ref->ref_count == 0)
-				{
-					delete ref;
-				}
-			}
-
-			explicit operator T*() const
-			{
-				return objRef;
+				Decrement();
 			}
 
 			template<typename... Us>
@@ -156,91 +159,207 @@ namespace GlProj
 				AllocateControlFromArgs(std::forward<Us>(values)...);
 			}
 
-			explicit LocalSharedPtr(const T& c)
-			{
-				AllocateControl(c);
-			}
-			explicit LocalSharedPtr(T&& c)
-			{
-				AllocateControl(std::move(c));
-			}
 			explicit LocalSharedPtr(T* p)
 			{
 				AllocateControl(p);
 			}
 
-			LocalSharedPtr& operator=(const T& c)
+			template<typename U,
+				typename = std::enable_if_t<std::is_convertible<U*, T*>>>
+				LocalSharedPtr& operator=(const LocalSharedPtr<U>& x)
 			{
-				Decrement();
-				AllocateControl(c);
+				if (x.ref != ref)
+				{
+					InternalReset(x.objRef, x.ref);
 
-				return *this;
+					Increment();
+				}
 			}
-			LocalSharedPtr& operator=(T&& c)
+			template<typename U,
+				typename = std::enable_if_t<std::is_convertible<U*, T*>>>
+			LocalSharedPtr& operator=(LocalSharedPtr<U>&& x)
 			{
-				Decrement();
-				AllocateControl(std::move(c));
+				if (x.ref != ref)
+				{
+					InternalReset(x.objRef, x.ref);
 
-				return *this;
+					x.objRef = nullptr;
+					x.ref = nullptr;
+				}
 			}
 
-			T* get()
+			T* get() const noexcept
 			{
 				return objRef;
 			}
-			const T* get() const
+
+			T& operator*() const
+			{
+				return *objRef;
+			}
+			T* operator->() const
 			{
 				return objRef;
+			}
+
+			long use_count() const
+			{
+				return ref == nullptr ? 0l : long(ref->ref_count);
+			}
+			bool unique() const
+			{
+				return use_count() == 1;
+			}
+			explicit operator bool() const
+			{
+				return get() != nullptr;
 			}
 
 			void reset()
 			{
-				Decrement();
-				objRef = nullptr;
-				ref = nullptr;
+				InternalReset();
 			}
 			void reset(T* ptr)
 			{
-				Decrement();
 				AllocateControl(ptr);
 			}
 
-			friend bool operator==(const LocalSharedPtr& x,
-				const LocalSharedPtr& y)
+			template<typename U>
+			bool owner_before(const LocalSharedPtr<U>& x)
 			{
-				return x.ref == y.ref;
+				return ref < x.ref;
 			}
-			friend bool operator!=(const LocalSharedPtr& x,
-				const LocalSharedPtr& y)
+
+			template<typename U1, typename U2>
+			friend bool operator==(const LocalSharedPtr<U1>& x,
+				const LocalSharedPtr<U2>& y) noexcept
+			{
+				return x.get() == y.get();
+			}
+			template<typename U1>
+			friend bool operator==(const LocalSharedPtr<U1>& x, 
+								   std::nullptr_t npt) noexcept
+			{
+				return x.get() == npt;
+			}
+			template<typename U1>
+			friend bool operator==(std::nullptr_t npt,
+								   const LocalSharedPtr<U1>& x) noexcept
+			{
+				return x == npt;
+			}
+
+			template<typename U1, typename U2>
+			friend bool operator!=(const LocalSharedPtr<U1>& x,
+				const LocalSharedPtr<U2>& y) noexcept
 			{
 				return !(x == y);
 			}
+			template<typename U1>
+			friend bool operator!=(const LocalSharedPtr<U1>& x,
+				std::nullptr_t npt) noexcept
+			{
+				return !(x == npt);
+			}
+			template<typename U1>
+			friend bool operator!=(std::nullptr_t npt,
+				const LocalSharedPtr<U1>& x) noexcept
+			{
+				return x != npt;
+			}
 
-			friend bool operator==(const LocalSharedPtr& x,
-				const T* p)
+			template<typename U1, typename U2>
+			friend bool operator<(const LocalSharedPtr<U1>& x,
+				const LocalSharedPtr<U2>& y) noexcept
 			{
-				return x.objRef == p;
+				return std::less<
+					std::common_type_t<decltype(x.get()),
+									   decltype(y.get())>>()(x.get(), y.get());
 			}
-			friend bool operator!=(const LocalSharedPtr& x,
-				const T* p)
+			template<typename U1>
+			friend bool operator<(const LocalSharedPtr<U1>& x,
+				std::nullptr_t npt) noexcept
 			{
-				return !(x == p)
+				return std::less<U1*>()(x.get(), (U1*)npt);
 			}
-			friend bool operator==(const T* p, const LocalSharedPtr& x)
+			template<typename U1>
+			friend bool operator<(std::nullptr_t npt,
+				const LocalSharedPtr<U1>& y) noexcept
 			{
-				return x == p;
+				return std::less<U1*>()((U1*)npt, y.get());
 			}
-			friend bool operator!=(const T* p, const LocalSharedPtr& x)
+			
+			template<typename U1, typename U2>
+			friend bool operator<=(const LocalSharedPtr<U1>& x,
+				const LocalSharedPtr<U2>& y) noexcept
 			{
-				return !(p == x)
+				return !(y < x);
+			}
+			template<typename U1>
+			friend bool operator<=(const LocalSharedPtr<U1>& x,
+				std::nullptr_t npt) noexcept
+			{
+				return !(npt < x.get());
+			}
+			template<typename U1>
+			friend bool operator<=(std::nullptr_t npt,
+				const LocalSharedPtr<U1>& y) noexcept
+			{
+				return !(y.get() < npt);
+			}
+
+			template<typename U1, typename U2>
+			friend bool operator>(const LocalSharedPtr<U1>& x,
+				const LocalSharedPtr<U2>& y) noexcept
+			{
+				return y < x;
+			}
+			template<typename U1>
+			friend bool operator>(const LocalSharedPtr<U1>& x,
+				std::nullptr_t npt) noexcept
+			{
+				return npt < x;
+			}
+			template<typename U1>
+			friend bool operator>(std::nullptr_t npt,
+				const LocalSharedPtr<U1>& y) noexcept
+			{
+				return y < npt;
+			}
+
+			template<typename U1, typename U2>
+			friend bool operator>=(const LocalSharedPtr<U1>& x,
+				const LocalSharedPtr<U2>& y) noexcept
+			{
+				return !(x < y);
+			}
+			template<typename U1>
+			friend bool operator>=(const LocalSharedPtr<U1>& x,
+				std::nullptr_t npt) noexcept
+			{
+				return !(x < npt);
+			}
+			template<typename U1>
+			friend bool operator>=(std::nullptr_t npt,
+				const LocalSharedPtr<U1>& y) noexcept
+			{
+				return !(npt < y);
+			}
+
+			friend void swap(LocalSharedPtr& x, LocalSharedPtr& y) noexcept
+			{
+				using std:swap;
+
+				swap(x.ref, y.ref);
+				swap(x.objRef, y.objRef);
 			}
 		};
 
 		template<typename T, typename... Us>
 		LocalSharedPtr<T> make_localshared(Us&&... values)
 		{
-			return LocalSharedPtr<T>(detail::MakeFromFunc(), 
-									 std::forward<Us>(values)...);
+			return LocalSharedPtr<T>(detail::MakeFromFunc(),
+				std::forward<Us>(values)...);
 		}
 	}
 }

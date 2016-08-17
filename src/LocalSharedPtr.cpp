@@ -16,6 +16,10 @@ namespace GlProj
 			t1 = make_localshared<int>();
 			auto ptr = t1.get();
 			*ptr = 321;
+
+			t1 >= t2;
+			t1 <= nullptr;
+			nullptr > t2;
 		}
 	}
 }

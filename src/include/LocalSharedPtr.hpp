@@ -39,33 +39,6 @@ namespace GlProj
 				virtual ~RefJoined() = default;
 			};
 
-			struct RefEmbeddedBase
-			{
-				virtual ~RefEmbeddedBase() = default;
-			};
-			template<typename T>
-			struct RefEmbeddedSeparated : public RefEmbeddedBase
-			{
-				T* data;
-
-				virtual ~RefEmbeddedSeparated()
-				{
-					delete data;
-				}
-			};
-			template<typename T>
-			struct RefEmbeddedJoined : public RefEmbeddedBase
-			{
-				T data;
-
-				template<typename... Us>
-				explicit RefEmbeddedJoined(Us&&... values)
-					:data(std::forward<Us>(values)...)
-				{}
-
-				virtual ~RefEmbeddedJoined() = default;
-			};
-
 			struct MakeFromFunc {};
 
 			template<typename T>
@@ -281,10 +254,11 @@ namespace GlProj
 			}
 		};
 
+		//The expectation of intrusively counted objects is that
+		//their count starts at 1 when first constructed.
 		template<typename T>
 			class LocalSharedPtr<T, std::enable_if_t<detail::is_intrusively_counted<T>::value>>
 		{
-			detail::RefEmbeddedBase* ref;
 			T* objRef = nullptr;
 
 			void Increment()
@@ -306,51 +280,37 @@ namespace GlProj
 
 			void InternalReset()
 			{
-				InternalReset(nullptr, nullptr);
+				InternalReset(nullptr);
 			}
-			void InternalReset(T* d, detail::RefEmbeddedBase* r)
+			void InternalReset(T* d)
 			{
 				Decrement();
 
 				objRef = d;
-				ref = r;
 			}
 
 
 			void AllocateControl(T* x)
 			{
-				if (x == nullptr)
-				{
-					InternalReset();
-				}
-				else
-				{
-					auto reference = new detail::RefSeparated<T>;
-					reference->data = x;
-					InternalReset(reference->data, reference);
-				}
+				InternalReset(x);
 			}
 			template<typename... Us>
 			void AllocateControlFromArgs(Us&&... values)
 			{
-				auto reference = new detail::RefEmbeddedJoined<T>(std::forward<Us>(values)...);
-				InternalReset(&(reference->data), reference);
+				InternalReset(new T(std::forward<Us>(values)...));
 			}
 		public:
-			LocalSharedPtr() noexcept
-				:ref(nullptr)
-			{}
+			LocalSharedPtr() noexcept = default;
 			LocalSharedPtr(const LocalSharedPtr& x)
 				: objRef(x.objRef)
-				, ref(x.ref)
 			{
 				Increment();
 			}
 			LocalSharedPtr& operator=(const LocalSharedPtr& x)
 			{
-				if (x.ref != ref)
+				if (x.objRef != objRef)
 				{
-					InternalReset(x.objRef, x.ref);
+					InternalReset(x.objRef);
 
 					Increment();
 				}
@@ -358,16 +318,13 @@ namespace GlProj
 				return *this;
 			}
 			LocalSharedPtr(LocalSharedPtr&& x) noexcept
-				:ref(x.ref)
-				, objRef(x.objRef)
+				: objRef(x.objRef)
 			{
-				x.ref = nullptr;
 				x.objRef = nullptr;
 			}
 			LocalSharedPtr& operator=(LocalSharedPtr&& x) noexcept
 			{
-				InternalReset(x.objRef, x.ref);
-				x.ref = nullptr;
+				InternalReset(x.objRef);
 				x.objRef = nullptr;
 
 				return *this;
@@ -377,9 +334,15 @@ namespace GlProj
 				Decrement();
 			}
 
-			LocalSharedPtr(std::nullptr_t p)
+			LocalSharedPtr(std::nullptr_t)
 				: LocalSharedPtr()
 			{}
+			LocalSharedPtr& operator=(std::nullptr_t)
+			{
+				InternalReset();
+				return *this;
+			}
+
 			template<typename... Us>
 			explicit LocalSharedPtr(detail::MakeFromFunc, Us&&... values)
 				:LocalSharedPtr()
@@ -399,24 +362,25 @@ namespace GlProj
 				typename = std::enable_if_t<std::is_convertible<U*, T*>::value>>
 				LocalSharedPtr& operator=(const LocalSharedPtr<U>& x)
 			{
-				if (x.ref != ref)
+				if (x.InternalGetPtr() != objRef)
 				{
-					InternalReset(x.objRef, x.ref);
+					InternalReset(x.InternalGetPtr());
 
 					Increment();
 				}
+				return *this;
 			}
 			template<typename U,
 				typename = std::enable_if_t<std::is_convertible<U*, T*>::value>>
 				LocalSharedPtr& operator=(LocalSharedPtr<U>&& x)
 			{
-				if (x.ref != ref)
+				if (x.InternalGetPtr() != objRef)
 				{
-					InternalReset(x.objRef, x.ref);
+					InternalReset(x.InternalGetPtr());
 
-					x.objRef = nullptr;
-					x.ref = nullptr;
+					x.InternalSetPtr(nullptr);
 				}
+				return *this;
 			}
 
 			T* get() const noexcept
@@ -435,7 +399,7 @@ namespace GlProj
 
 			long use_count() const
 			{
-				return ref == nullptr ? 0l : long(objRef->LocalUseCount());
+				return objRef == nullptr ? 0l : long(objRef->LocalUseCount());
 			}
 			bool unique() const
 			{
@@ -458,7 +422,21 @@ namespace GlProj
 			template<typename U>
 			bool owner_before(const LocalSharedPtr<U>& x)
 			{
-				return ref < x.ref;
+				return objRef < x.InternalGetPtr();
+			}
+
+			T* InternalGetPtr() const
+			{
+				return objRef;
+			}
+			template<typename U>
+			void InternalSetPtr(U* ptr)
+			{
+				objRef = ptr;
+			}
+			void InternalSetPtr(std::nullptr_t)
+			{
+				objRef = nullptr;
 			}
 		};
 

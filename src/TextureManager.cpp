@@ -11,6 +11,7 @@
 #include <utility>
 
 using namespace std::experimental::filesystem;
+using namespace GlProj::Utilities;
 
 namespace GlProj
 {
@@ -26,15 +27,15 @@ namespace GlProj
 
 		class TextureManager
 		{
-			std::unordered_map<std::string, std::weak_ptr<Texture>> registeredTextures;
+			std::unordered_map<std::string, LocalWeakPtr<Texture>> registeredTextures;
 		public:
-			std::shared_ptr<Texture> RegisterTexture(GLenum type, GLuint handle, const std::string& name)
+			LocalSharedPtr<Texture> RegisterTexture(GLenum type, GLuint handle, const std::string& name)
 			{
-				auto newPtr = std::make_shared<Texture>(type, handle);
+				auto newPtr = make_localshared<Texture>(type, handle);
 				registeredTextures[name] = newPtr;
 				return std::move(newPtr);
 			}
-			std::shared_ptr<Texture> FindByName(const std::string& name) const
+			LocalSharedPtr<Texture> FindByName(const std::string& name) const
 			{
 				auto found = registeredTextures.find(name);
 				if (found == registeredTextures.end())
@@ -69,7 +70,7 @@ namespace GlProj
 			return &instance;
 		}
 
-		std::shared_ptr<Texture> LoadTexture(TextureManager* manager, const std::string& path, bool replace)
+		LocalSharedPtr<Texture> LoadTexture(TextureManager* manager, const std::string& path, bool replace)
 		{
 			if(!replace)
 			{
@@ -140,7 +141,7 @@ namespace GlProj
 
 			return manager->RegisterTexture(textureDimensions, handle, canonical(path).u8string());
 		}
-		std::shared_ptr<Texture> RegisterTexture(TextureManager* manager, GLenum type, GLuint handle, const std::string& name, bool replace)
+		LocalSharedPtr<Texture> RegisterTexture(TextureManager* manager, GLenum type, GLuint handle, const std::string& name, bool replace)
 		{
 			if (!replace)
 			{
@@ -154,13 +155,13 @@ namespace GlProj
 			return manager->RegisterTexture(type, handle, name);
 		}
 
-		std::shared_ptr<Texture> FindCachedTextureByPath(const TextureManager* manager, const std::string& path)
+		LocalSharedPtr<Texture> FindCachedTextureByPath(const TextureManager* manager, const std::string& path)
 		{
 			auto canonicalPath = canonical(path).u8string();
 			
 			return manager->FindByName(canonicalPath);
 		}
-		std::shared_ptr<Texture> FindCachedTextureByName(const TextureManager* manager, const std::string& name)
+		LocalSharedPtr<Texture> FindCachedTextureByName(const TextureManager* manager, const std::string& name)
 		{
 			return manager->FindByName(name);
 		}
@@ -169,9 +170,9 @@ namespace GlProj
 		{
 			manager->CleanUpDangling();
 		}
-		std::unique_ptr<Sampler> GenerateSampler()
+		LocalSharedPtr<Sampler> GenerateSampler()
 		{
-			return std::make_unique<Sampler>();
+			return make_localshared<Sampler>();
 		}
 	}
 }

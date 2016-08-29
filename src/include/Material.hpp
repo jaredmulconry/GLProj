@@ -1,7 +1,7 @@
 #pragma once
 #include "OpenGLTypes.hpp"
 #include "glm\fwd.hpp"
-#include <memory>
+#include "LocalSharedPtr.hpp"
 
 namespace GlProj
 {
@@ -27,16 +27,20 @@ namespace GlProj
 
 		GLint TextureSlotToGL(TextureSlot s);
 
+		using GlProj::Utilities::LocalSharedPtr;
+
 		class Material
 		{
-			std::shared_ptr<ShadingProgram> program;
+			LocalSharedPtr<ShadingProgram> program;
 			
 		public:
 			Material() noexcept = default;
-			explicit Material(const std::shared_ptr<ShadingProgram>&);
+			explicit Material(const LocalSharedPtr<ShadingProgram>&);
 
-			Material& operator=(const std::shared_ptr<ShadingProgram>&);
+			Material& operator=(const LocalSharedPtr<ShadingProgram>&);
 
+			void Bind() const;
+			
 			void SetUniform(const UniformInformation&, GLint);
 			void SetUniform(const UniformInformation&, GLuint);
 			void SetUniform(const UniformInformation&, GLfloat);

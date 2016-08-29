@@ -16,12 +16,12 @@ namespace GlProj
 
 		TextureManager* GetTextureManager();
 
-		std::shared_ptr<Texture> LoadTexture(TextureManager*, const std::string&, bool = false);
-		std::shared_ptr<Texture> RegisterTexture(TextureManager*, GLenum, GLuint, const std::string&, bool = false);
-		std::shared_ptr<Texture> FindCachedTextureByPath(const TextureManager*, const std::string&);
-		std::shared_ptr<Texture> FindCachedTextureByName(const TextureManager*, const std::string&);
+		LocalSharedPtr<Texture> LoadTexture(TextureManager*, const std::string&, bool = false);
+		LocalSharedPtr<Texture> RegisterTexture(TextureManager*, GLenum, GLuint, const std::string&, bool = false);
+		LocalSharedPtr<Texture> FindCachedTextureByPath(const TextureManager*, const std::string&);
+		LocalSharedPtr<Texture> FindCachedTextureByName(const TextureManager*, const std::string&);
 		void ReleaseUnused(TextureManager*);
 
-		std::unique_ptr<Sampler> GenerateSampler();
+		LocalSharedPtr<Sampler> GenerateSampler();
 	}
 }

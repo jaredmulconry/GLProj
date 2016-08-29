@@ -79,8 +79,8 @@ void ValidateType<GLint>(const GlProj::Graphics::UniformInformation& t)
 
 	if (!std::binary_search(std::begin(ValidTypes), std::end(ValidTypes), t.type))
 	{
-		std::string err = "Type mismatch on shader uniform \"" + t.name 
-						+ "\": \n Actual type: ";
+		std::string err = "Type mismatch on shader uniform \"" + t.name
+			+ "\": \n Actual type: ";
 		err += t.type;
 		err += "\n Provided type: GLint";
 		throw std::logic_error(err);
@@ -107,7 +107,7 @@ void ValidateType<GLuint>(const GlProj::Graphics::UniformInformation& t)
 		std::sort(std::begin(ValidTypes), std::end(ValidTypes));
 	});
 
-	if(!std::binary_search(std::begin(ValidTypes), std::end(ValidTypes), t.type))
+	if (!std::binary_search(std::begin(ValidTypes), std::end(ValidTypes), t.type))
 	{
 		std::string err = "Type mismatch on shader uniform \"" + t.name
 			+ "\": \n Actual type: ";
@@ -142,7 +142,7 @@ void ValidateType<GLfloat>(const GlProj::Graphics::UniformInformation& t)
 		std::sort(std::begin(ValidTypes), std::end(ValidTypes));
 	});
 
-	if(!std::binary_search(std::begin(ValidTypes), std::end(ValidTypes), t.type))
+	if (!std::binary_search(std::begin(ValidTypes), std::end(ValidTypes), t.type))
 	{
 		std::string err = "Type mismatch on shader uniform \"" + t.name
 			+ "\": \n Actual type: ";
@@ -168,7 +168,7 @@ void ValidateType<glm::vec2>(const GlProj::Graphics::UniformInformation& t)
 		std::sort(std::begin(ValidTypes), std::end(ValidTypes));
 	});
 
-	if(!std::binary_search(std::begin(ValidTypes), std::end(ValidTypes), t.type))
+	if (!std::binary_search(std::begin(ValidTypes), std::end(ValidTypes), t.type))
 	{
 		std::string err = "Type mismatch on shader uniform \"" + t.name
 			+ "\": \n Actual type: ";
@@ -194,7 +194,7 @@ void ValidateType<glm::vec3>(const GlProj::Graphics::UniformInformation& t)
 		std::sort(std::begin(ValidTypes), std::end(ValidTypes));
 	});
 
-	if(!std::binary_search(std::begin(ValidTypes), std::end(ValidTypes), t.type))
+	if (!std::binary_search(std::begin(ValidTypes), std::end(ValidTypes), t.type))
 	{
 		std::string err = "Type mismatch on shader uniform \"" + t.name
 			+ "\": \n Actual type: ";
@@ -220,7 +220,7 @@ void ValidateType<glm::vec4>(const GlProj::Graphics::UniformInformation& t)
 		std::sort(std::begin(ValidTypes), std::end(ValidTypes));
 	});
 
-	if(!std::binary_search(std::begin(ValidTypes), std::end(ValidTypes), t.type))
+	if (!std::binary_search(std::begin(ValidTypes), std::end(ValidTypes), t.type))
 	{
 		std::string err = "Type mismatch on shader uniform \"" + t.name
 			+ "\": \n Actual type: ";
@@ -242,7 +242,7 @@ void ValidateType<glm::mat2>(const GlProj::Graphics::UniformInformation& t)
 		std::sort(std::begin(ValidTypes), std::end(ValidTypes));
 	});
 
-	if(!std::binary_search(std::begin(ValidTypes), std::end(ValidTypes), t.type))
+	if (!std::binary_search(std::begin(ValidTypes), std::end(ValidTypes), t.type))
 	{
 		std::string err = "Type mismatch on shader uniform \"" + t.name
 			+ "\": \n Actual type: ";
@@ -264,7 +264,7 @@ void ValidateType<glm::mat3>(const GlProj::Graphics::UniformInformation& t)
 		std::sort(std::begin(ValidTypes), std::end(ValidTypes));
 	});
 
-	if(!std::binary_search(std::begin(ValidTypes), std::end(ValidTypes), t.type))
+	if (!std::binary_search(std::begin(ValidTypes), std::end(ValidTypes), t.type))
 	{
 		std::string err = "Type mismatch on shader uniform \"" + t.name
 			+ "\": \n Actual type: ";
@@ -287,7 +287,7 @@ void ValidateType<glm::mat4>(const GlProj::Graphics::UniformInformation& t)
 		std::sort(std::begin(ValidTypes), std::end(ValidTypes));
 	});
 
-	if(!std::binary_search(std::begin(ValidTypes), std::end(ValidTypes), t.type))
+	if (!std::binary_search(std::begin(ValidTypes), std::end(ValidTypes), t.type))
 	{
 		std::string err = "Type mismatch on shader uniform \"" + t.name
 			+ "\": \n Actual type: ";
@@ -299,7 +299,7 @@ void ValidateType<glm::mat4>(const GlProj::Graphics::UniformInformation& t)
 
 void ValidateBounds(const GlProj::Graphics::UniformInformation& t, int s)
 {
-	if(t.size < s)
+	if (t.size < s)
 	{
 		std::string err = "Uniform access out of bounds.\nUniform name: " + t.name
 			+ "\nType: ";
@@ -316,14 +316,21 @@ namespace GlProj
 {
 	namespace Graphics
 	{
-		Material::Material(const std::shared_ptr<ShadingProgram>& p)
+		Material::Material(const LocalSharedPtr<ShadingProgram>& p)
 			:program(p)
 		{}
-		Material& Material::operator=(const std::shared_ptr<ShadingProgram>& p)
+		Material& Material::operator=(const LocalSharedPtr<ShadingProgram>& p)
 		{
 			program = p;
 
 			return *this;
+		}
+		void Material::Bind() const
+		{
+			if (program != nullptr)
+			{
+				program->Bind();
+			}
 		}
 		void Material::SetUniform(const UniformInformation& u, GLint i)
 		{
@@ -364,7 +371,7 @@ namespace GlProj
 
 		void Material::SetUniform(const UniformInformation& u, const GLint* i, int s)
 		{
-			if(enable_gl_type_validation)
+			if (enable_gl_type_validation)
 			{
 				ValidateType<remove_cvrp<decltype(i)>>(u);
 				ValidateBounds(u, s);
@@ -374,7 +381,7 @@ namespace GlProj
 		}
 		void Material::SetUniform(const UniformInformation& u, const GLuint* ui, int s)
 		{
-			if(enable_gl_type_validation)
+			if (enable_gl_type_validation)
 			{
 				ValidateType<remove_cvrp<decltype(ui)>>(u);
 				ValidateBounds(u, s);
@@ -384,7 +391,7 @@ namespace GlProj
 		}
 		void Material::SetUniform(const UniformInformation& u, const GLfloat* f, int s)
 		{
-			if(enable_gl_type_validation)
+			if (enable_gl_type_validation)
 			{
 				ValidateType<remove_cvrp<decltype(f)>>(u);
 				ValidateBounds(u, s);
@@ -394,7 +401,7 @@ namespace GlProj
 		}
 		void Material::SetUniform(const UniformInformation& u, const glm::vec2* v, int s)
 		{
-			if(enable_gl_type_validation)
+			if (enable_gl_type_validation)
 			{
 				ValidateType<remove_cvrp<decltype(v)>>(u);
 				ValidateBounds(u, s);
@@ -403,7 +410,7 @@ namespace GlProj
 		}
 		void Material::SetUniform(const UniformInformation& u, const glm::vec3* v, int s)
 		{
-			if(enable_gl_type_validation)
+			if (enable_gl_type_validation)
 			{
 				ValidateType<remove_cvrp<decltype(v)>>(u);
 				ValidateBounds(u, s);
@@ -412,7 +419,7 @@ namespace GlProj
 		}
 		void Material::SetUniform(const UniformInformation& u, const glm::vec4* v, int s)
 		{
-			if(enable_gl_type_validation)
+			if (enable_gl_type_validation)
 			{
 				ValidateType<remove_cvrp<decltype(v)>>(u);
 				ValidateBounds(u, s);
@@ -421,7 +428,7 @@ namespace GlProj
 		}
 		void Material::SetUniform(const UniformInformation& u, const glm::mat2* m, int s)
 		{
-			if(enable_gl_type_validation)
+			if (enable_gl_type_validation)
 			{
 				ValidateType<remove_cvrp<decltype(m)>>(u);
 				ValidateBounds(u, s);
@@ -430,7 +437,7 @@ namespace GlProj
 		}
 		void Material::SetUniform(const UniformInformation& u, const glm::mat3* m, int s)
 		{
-			if(enable_gl_type_validation)
+			if (enable_gl_type_validation)
 			{
 				ValidateType<remove_cvrp<decltype(m)>>(u);
 				ValidateBounds(u, s);
@@ -439,7 +446,7 @@ namespace GlProj
 		}
 		void Material::SetUniform(const UniformInformation& u, const glm::mat4* m, int s)
 		{
-			if(enable_gl_type_validation)
+			if (enable_gl_type_validation)
 			{
 				ValidateType<remove_cvrp<decltype(m)>>(u);
 				ValidateBounds(u, s);

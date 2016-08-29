@@ -17,17 +17,20 @@ namespace GlProj
 {
 	namespace Graphics
 	{
+		using GlProj::Utilities::LocalWeakPtr;
+		using GlProj::Utilities::make_localshared;
+
 		class ShaderManager
 		{
-			std::unordered_map<std::string, std::weak_ptr<Shader>> registeredShaders;
+			std::unordered_map<std::string, LocalWeakPtr<Shader>> registeredShaders;
 		public:
-			std::shared_ptr<Shader> RegisterShader(GLenum type, GLuint handle, const std::string& name)
+			LocalSharedPtr<Shader> RegisterShader(GLenum type, GLuint handle, const std::string& name)
 			{
-				auto newPtr = std::make_shared<Shader>(type, handle);
+				auto newPtr = make_localshared<Shader>(type, handle);
 				registeredShaders.insert_or_assign(name, newPtr);
 				return std::move(newPtr);
 			}
-			std::shared_ptr<Shader> FindByName(const std::string& name) const
+			LocalSharedPtr<Shader> FindByName(const std::string& name) const
 			{
 				auto found = registeredShaders.find(name);
 				if(found == registeredShaders.end())
@@ -59,7 +62,7 @@ namespace GlProj
 			static ShaderManager instance;
 			return &instance;
 		}
-		std::shared_ptr<Shader> LoadShader(ShaderManager* manager, GLenum shaderType, const std::string& path, bool replace)
+		LocalSharedPtr<Shader> LoadShader(ShaderManager* manager, GLenum shaderType, const std::string& path, bool replace)
 		{
 			if(!replace)
 			{
@@ -140,7 +143,7 @@ namespace GlProj
 
 			return manager->RegisterShader(shaderType, shaderID, canonical(path).u8string());
 		}
-		std::shared_ptr<Shader> RegisterShader(ShaderManager* manager, GLenum type, GLuint handle, const std::string& name, bool replace)
+		LocalSharedPtr<Shader> RegisterShader(ShaderManager* manager, GLenum type, GLuint handle, const std::string& name, bool replace)
 		{
 			if (!replace)
 			{
@@ -154,13 +157,13 @@ namespace GlProj
 			return manager->RegisterShader(type, handle, name);
 		}
 
-		std::shared_ptr<Shader> FindCachedShaderByPath(const ShaderManager* manager, const std::string& path)
+		LocalSharedPtr<Shader> FindCachedShaderByPath(const ShaderManager* manager, const std::string& path)
 		{
 			auto canonicalPath = canonical(path).u8string();
 
 			return manager->FindByName(canonicalPath);
 		}
-		std::shared_ptr<Shader> FindCachedShaderByName(const ShaderManager* manager, const std::string& name)
+		LocalSharedPtr<Shader> FindCachedShaderByName(const ShaderManager* manager, const std::string& name)
 		{
 			return manager->FindByName(name);
 		}
@@ -169,9 +172,9 @@ namespace GlProj
 			manager->CleanUpDangling();
 		}
 		
-		std::shared_ptr<ShadingProgram> GenerateProgram()
+		LocalSharedPtr<ShadingProgram> GenerateProgram()
 		{
-			return std::make_shared<ShadingProgram>(glCreateProgram());
+			return make_localshared<ShadingProgram>(glCreateProgram());
 		}
 		void AttachShader(ShadingProgram* program, Shader* shader)
 		{

@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <new>
 #include <type_traits>
 #include <utility>
@@ -72,7 +73,7 @@ namespace GlProj
 		template<typename, typename = void>
 		class LocalSharedPtr;
 
-		template<typename, typename = void>
+		template<typename>
 		class LocalWeakPtr;
 
 		template<typename T>
@@ -93,7 +94,11 @@ namespace GlProj
 
 				if (ref->ref_count == 0)
 				{
-					delete ref;
+					ref->Destroy();
+					if (ref->weak_count == 0)
+					{
+						delete ref;
+					}
 					ref = nullptr;
 					objRef = nullptr;
 				}
@@ -148,6 +153,7 @@ namespace GlProj
 
 			constexpr LocalSharedPtr() noexcept
 				: ref(nullptr)
+				, objRef(nullptr)
 			{}
 			LocalSharedPtr(const LocalSharedPtr& x)
 				:ref(x.ref)
@@ -186,14 +192,26 @@ namespace GlProj
 				Decrement();
 			}
 
-			constexpr LocalSharedPtr(std::nullptr_t p)
-				: LocalSharedPtr()
+			constexpr LocalSharedPtr(std::nullptr_t p) noexcept
+				: ref(nullptr)
+				, objRef(nullptr)
 			{}
 			template<typename... Us>
 			explicit LocalSharedPtr(detail::MakeFromFunc, Us&&... values)
 				:LocalSharedPtr()
 			{
 				AllocateControlFromArgs(std::forward<Us>(values)...);
+			}
+
+			template<typename U,
+				typename = std::enable_if_t<std::is_convertible<U*, T*>::value>>
+			explicit LocalSharedPtr(const LocalWeakPtr<U>& x)
+			{
+				if (x.expired()) throw std::bad_weak_ptr();
+
+				objRef = x.refObj;
+				ref = x.ref;
+				Increment();
 			}
 
 			template<typename U,
@@ -268,6 +286,24 @@ namespace GlProj
 			bool owner_before(const LocalSharedPtr<U>& x)
 			{
 				return ref < x.ref;
+			}
+
+			detail::RefBase* InternalGetRef() const
+			{
+				return ref;
+			}
+			T* InternalGetPtr() const
+			{
+				return objRef;
+			}
+			template<typename U>
+			void InternalSetPtr(U* ptr)
+			{
+				objRef = ptr;
+			}
+			void InternalSetPtr(std::nullptr_t)
+			{
+				objRef = nullptr;
 			}
 		};
 
@@ -445,6 +481,10 @@ namespace GlProj
 				return objRef < x.InternalGetPtr();
 			}
 
+			detail::RefBase* InternalGetRef() const
+			{
+				return ref;
+			}
 			T* InternalGetPtr() const
 			{
 				return objRef;
@@ -461,10 +501,13 @@ namespace GlProj
 		};
 
 		template<typename T>
-		class LocalWeakPtr<T, std::enable_if_t<!detail::is_intrusively_counted<T>::value>>
+		class LocalWeakPtr
 		{
+			static_assert(!detail::is_intrusively_counted<T>::value, "Intrusively-counted objects can not support weak reference counting.");
+
 			detail::RefBase* ref;
 			T* refObj;
+			friend class LocalSharedPtr<T>;
 
 			void IncrementWeak()
 			{
@@ -487,13 +530,181 @@ namespace GlProj
 				:ref(nullptr)
 				,refObj(nullptr)
 			{}
-			LocalWeakPtr(const weak_ptr& r)
+			LocalWeakPtr(const LocalWeakPtr& r)
 				:ref(r.ref)
 				,refObj(r.refObj)
 			{
 				IncrementWeak();
 			}
+			template<typename Y, typename = std::enable_if_t<std::is_convertible<Y*, T*>::value>>
+			LocalWeakPtr(const LocalWeakPtr<Y>& r)
+				:ref(r.ref)
+				,refObj(r.refObj)
+			{
+				IncrementWeak();
+			}
+			template<typename Y, typename = std::enable_if_t<std::is_convertible<Y*, T*>::value>>
+			LocalWeakPtr(const LocalSharedPtr<Y>& r)
+				:ref(r.InternalGetRef())
+				,refObj(r.get())
+			{
+				IncrementWeak();
+			}
+			LocalWeakPtr(LocalWeakPtr&& r) noexcept
+				:ref(r.ref)
+				,refObj(r.refObj)
+			{
+				r.ref = nullptr;
+				r.refObj = nullptr;
+			}
+			template<typename Y, typename = std::enable_if_t<std::is_convertible<Y*, T*>::value>>
+			LocalWeakPtr(LocalWeakPtr<Y>&& r)
+				:ref(r.ref)
+				,refObj(r.refObj)
+			{
+				r.ref = nullptr;
+				r.refObj = nullptr;
+			}
+			~LocalWeakPtr()
+			{
+				DecrementWeak();
+			}
 
+			LocalWeakPtr& operator=(const LocalWeakPtr& r)
+			{
+				if (r.ref != ref)
+				{
+					if (ref != nullptr)
+					{
+						DecrementWeak();
+					}
+
+					ref = r.ref;
+					refObj = r.refObj;
+
+					if (ref != nullptr)
+					{
+						IncrementWeak();
+					}
+				}
+				return *this;
+			}
+			template<typename Y, typename = std::enable_if_t<std::is_assignable<Y*, T*>::value>>
+			LocalWeakPtr& operator=(const LocalWeakPtr<Y>& r)
+			{
+				if (ref != r.ref)
+				{
+					if (ref != nullptr)
+					{
+						DecrementWeak();
+					}
+
+					ref = r.ref;
+					refObj = r.refObj;
+
+					if (ref != nullptr)
+					{
+						IncrementWeak();
+					}
+				}
+				return *this;
+			}
+			template<typename Y, typename = std::enable_if_t<std::is_assignable<Y*, T*>::value>>
+			LocalWeakPtr& operator=(const LocalSharedPtr<Y>& r)
+			{
+				if (ref != r.ref)
+				{
+					if (ref != nullptr)
+					{
+						DecrementWeak();
+					}
+
+					ref = r.ref;
+					refObj = r.objRef;
+
+					if (ref != nullptr)
+					{
+						IncrementWeak();
+					}
+				}
+				return *this;
+			}
+			LocalWeakPtr& operator=(LocalWeakPtr&& r) noexcept
+			{
+				if (ref != r.ref)
+				{
+					if (ref != nullptr)
+					{
+						DecrementWeak();
+					}
+
+					ref = r.ref;
+					refObj = r.refObj;
+
+					r.ref = nullptr;
+					r.refObj = nullptr;
+				}
+				return *this;
+			}
+			template<typename Y, typename = std::enable_if_t<std::is_assignable<Y*, T*>::value>>
+			LocalWeakPtr& operator=(LocalWeakPtr<Y>&& r) noexcept
+			{
+				if (ref != r.ref)
+				{
+					if (ref != nullptr)
+					{
+						DecrementWeak();
+					}
+
+					ref = r.ref;
+					refObj = r.refObj;
+
+					r.ref = nullptr;
+					r.refObj = nullptr;
+				}
+				return *this;
+			}
+
+			T* InternalGetPtr() const
+			{
+				return refObj;
+			}
+			detail::RefBase* InternalGetRef() const
+			{
+				return ref;
+			}
+
+			void reset()
+			{
+				DecrementWeak();
+
+				ref = nullptr;
+				refObj = nullptr;
+			}
+			void swap(LocalWeakPtr& r) noexcept
+			{
+				using std::swap;
+
+				swap(ref, r.ref);
+				swap(refObj, r.refObj);
+			}
+			long use_count() const
+			{
+				return ref == nullptr ? 0 : ref->ref_count;
+			}
+			bool expired() const
+			{
+				return use_count() == 0;
+			}
+			LocalSharedPtr<T> lock() const
+			{
+				return expired() ? LocalSharedPtr<T>() : LocalSharedPtr<T>(*this);
+			}
+			template<typename U>
+			bool owner_before(const LocalSharedPtr<U>& x)
+			{
+				return ref < x.InternalGetRef();
+			}
 		};
 
 		template<typename U1, typename U2>

@@ -3,6 +3,12 @@
 #include "assimp\Importer.hpp"
 #include "assimp\postprocess.h"
 #include "assimp\scene.h"
+#include "Material.hpp"
+#include "MeshManager.hpp"
+#include "Model.hpp"
+#include "Shader.hpp"
+#include "ShaderManager.hpp"
+#include "ShadingProgram.hpp"
 #include "Texture.hpp"
 #include "TextureManager.hpp"
 #include "Mesh.hpp"
@@ -11,8 +17,30 @@
 #include <exception>
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 
-using namespace GlProj::Graphics;
+using namespace GlProj::Graphics; 
+
+LocalSharedPtr<Material> GetDefaultMaterial()
+{
+	static bool firstRun = true;
+	static auto prog = GenerateProgram();
+	static auto mat = GlProj::Utilities::make_localshared<Material>();
+	if (!firstRun) return mat;
+
+	auto vs = LoadShader(GetShaderManager(), GL_VERTEX_SHADER, "./data/shaders/BasicShader.vs");
+	auto fs = LoadShader(GetShaderManager(), GL_FRAGMENT_SHADER, "./data/shaders/BasicShader.fs");
+	
+	AttachShader(prog.get(), vs.get());
+	AttachShader(prog.get(), fs.get());
+	LinkProgram(prog.get());
+	prog->FetchProgramInfo();
+
+	*mat = prog;
+	firstRun = false;
+
+	return mat; 
+}
 
 void PrepareAndRunGame(GLFWwindow* window)
 {
@@ -24,8 +52,15 @@ void PrepareAndRunGame(GLFWwindow* window)
 		err += importer.GetErrorString();
 		throw std::runtime_error(err);
 	}
+	std::vector<Renderable> submeshes; 
+	submeshes.reserve(bunny->mNumMeshes);
+	auto material = GetDefaultMaterial();
 
-	GlProj::Graphics::Mesh bunnyMesh{ *bunny->mMeshes };
+	for (int i = 0; i < int(bunny->mNumMeshes); ++i)
+	{
+		submeshes.push_back({ RegisterMesh(GetMeshManager(), bunny->mMeshes[i], bunny->mMeshes[i]->mName.C_Str()), 
+							  material });
+	}
 
 	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
 

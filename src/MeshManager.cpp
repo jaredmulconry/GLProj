@@ -10,17 +10,20 @@ namespace GlProj
 {
 	namespace Graphics
 	{
+		using GlProj::Utilities::LocalWeakPtr;
+		using GlProj::Utilities::make_localshared;
+
 		class MeshManager
 		{
-			std::unordered_map<std::string, std::weak_ptr<Mesh>> registeredMeshes;
+			std::unordered_map<std::string, LocalWeakPtr<Mesh>> registeredMeshes;
 		public:
-			std::shared_ptr<Mesh> RegisterMesh(aiMesh* mesh, const std::string& name)
+			LocalSharedPtr<Mesh> RegisterMesh(aiMesh* mesh, const std::string& name)
 			{
-				auto newPtr = std::make_shared<Mesh>(mesh);
+				auto newPtr = make_localshared<Mesh>(mesh);
 				registeredMeshes.insert_or_assign(name, newPtr);
 				return std::move(newPtr);
 			}
-			std::shared_ptr<Mesh> FindByName(const std::string& name) const
+			LocalSharedPtr<Mesh> FindByName(const std::string& name) const
 			{
 				auto found = registeredMeshes.find(name);
 				if(found == registeredMeshes.end())
@@ -52,7 +55,7 @@ namespace GlProj
 			static MeshManager instance;
 			return &instance;
 		}
-		std::shared_ptr<Mesh> RegisterMesh(MeshManager* manager, aiMesh* mesh, const std::string& name, bool replace)
+		LocalSharedPtr<Mesh> RegisterMesh(MeshManager* manager, aiMesh* mesh, const std::string& name, bool replace)
 		{
 			if(!replace)
 			{
@@ -65,7 +68,7 @@ namespace GlProj
 
 			return manager->RegisterMesh(mesh, name);
 		}
-		std::shared_ptr<Mesh> FindCachedMeshByName(const MeshManager* manager, const std::string& name)
+		LocalSharedPtr<Mesh> FindCachedMeshByName(const MeshManager* manager, const std::string& name)
 		{
 			return manager->FindByName(name);
 		}

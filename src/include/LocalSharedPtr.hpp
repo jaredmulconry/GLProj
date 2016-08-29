@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <new>
 #include <type_traits>
 #include <utility>
 
@@ -14,28 +15,38 @@ namespace GlProj
 			struct RefBase
 			{
 				std::int_fast32_t ref_count = 1;
+				std::int_fast32_t weak_count = 0;
 
+				virtual void Destroy() = 0;
 				virtual ~RefBase() = default;
 			};
 			template<typename T>
-			struct RefSeparated : public RefBase
+			struct RefSeparated final : public RefBase
 			{
 				T* data;
 
-				virtual ~RefSeparated()
+				// Inherited via RefBase
+				virtual void Destroy() override
 				{
 					delete data;
 				}
+				virtual ~RefSeparated() = default;
 			};
 			template<typename T>
-			struct RefJoined : public RefBase
+			struct RefJoined final : public RefBase
 			{
-				T data;
+				alignas(T) unsigned char data[sizeof(T)];
+				//T data;
 				template<typename... Us>
 				explicit RefJoined(Us&&... values)
-					:data(std::forward<Us>(values)...)
-				{}
+				{
+					new (data) T(std::forward<Us>(values)...);
+				}
 
+				virtual void Destroy() override
+				{
+					reinterpret_cast<T*>(data)->~T();
+				}
 				virtual ~RefJoined() = default;
 			};
 
@@ -59,7 +70,10 @@ namespace GlProj
 		}
 
 		template<typename, typename = void>
-			class LocalSharedPtr;
+		class LocalSharedPtr;
+
+		template<typename, typename = void>
+		class LocalWeakPtr;
 
 		template<typename T>
 		class LocalSharedPtr<T, std::enable_if_t<!detail::is_intrusively_counted<T>::value>>
@@ -67,7 +81,7 @@ namespace GlProj
 			detail::RefBase* ref;
 			T* objRef = nullptr;
 
-			void Increment()
+			void Increment() noexcept
 			{
 				if (ref == nullptr) return;
 				++ref->ref_count;
@@ -85,11 +99,11 @@ namespace GlProj
 				}
 			}
 
-			void InternalReset()
+			void InternalReset() noexcept
 			{
 				InternalReset(nullptr, nullptr);
 			}
-			void InternalReset(T* d, detail::RefBase* rc)
+			void InternalReset(T* d, detail::RefBase* rc) noexcept
 			{
 				Decrement();
 
@@ -126,10 +140,13 @@ namespace GlProj
 			void AllocateControlFromArgs(Us&&... values)
 			{
 				auto reference = new detail::RefJoined<T>(std::forward<Us>(values)...);
-				InternalReset(&(reference->data), reference);
+				InternalReset(reinterpret_cast<T*>(&(reference->data)), reference);
 			}
 		public:
-			LocalSharedPtr() noexcept
+			using is_intrusively_counted = std::false_type;
+			using element_type = T;
+
+			constexpr LocalSharedPtr() noexcept
 				: ref(nullptr)
 			{}
 			LocalSharedPtr(const LocalSharedPtr& x)
@@ -169,7 +186,7 @@ namespace GlProj
 				Decrement();
 			}
 
-			LocalSharedPtr(std::nullptr_t p)
+			constexpr LocalSharedPtr(std::nullptr_t p)
 				: LocalSharedPtr()
 			{}
 			template<typename... Us>
@@ -300,7 +317,10 @@ namespace GlProj
 				InternalReset(new T(std::forward<Us>(values)...));
 			}
 		public:
-			LocalSharedPtr() noexcept = default;
+			using is_intrusively_counted = std::true_type;
+			using element_type = T;
+
+			constexpr LocalSharedPtr() noexcept = default;
 			LocalSharedPtr(const LocalSharedPtr& x)
 				: objRef(x.objRef)
 			{
@@ -334,7 +354,7 @@ namespace GlProj
 				Decrement();
 			}
 
-			LocalSharedPtr(std::nullptr_t)
+			constexpr LocalSharedPtr(std::nullptr_t) noexcept
 				: LocalSharedPtr()
 			{}
 			LocalSharedPtr& operator=(std::nullptr_t)
@@ -438,6 +458,42 @@ namespace GlProj
 			{
 				objRef = nullptr;
 			}
+		};
+
+		template<typename T>
+		class LocalWeakPtr<T, std::enable_if_t<!detail::is_intrusively_counted<T>::value>>
+		{
+			detail::RefBase* ref;
+			T* refObj;
+
+			void IncrementWeak()
+			{
+				if (ref == nullptr) return;
+				++ref->weak_count;
+			}
+			void DecrementWeak()
+			{
+				if (ref == nullptr) return;
+				--ref->weak_count;
+				if (ref->weak_count == 0 && ref->ref_count == 0)
+				{
+					delete ref;
+					ref = nullptr;
+					refObj = nullptr;
+				}
+			}
+		public:
+			constexpr LocalWeakPtr() noexcept
+				:ref(nullptr)
+				,refObj(nullptr)
+			{}
+			LocalWeakPtr(const weak_ptr& r)
+				:ref(r.ref)
+				,refObj(r.refObj)
+			{
+				IncrementWeak();
+			}
+
 		};
 
 		template<typename U1, typename U2>

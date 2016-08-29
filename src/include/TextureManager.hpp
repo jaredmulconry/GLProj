@@ -1,5 +1,6 @@
 #pragma once
 #include "OpenGLTypes.hpp"
+#include "LocalSharedPtr.hpp"
 #include <memory>
 #include <string>
 
@@ -10,6 +11,8 @@ namespace GlProj
 		class TextureManager;
 		class Texture;
 		class Sampler;
+
+		using GlProj::Utilities::LocalSharedPtr;
 
 		TextureManager* GetTextureManager();
 

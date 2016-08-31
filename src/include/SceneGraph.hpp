@@ -3,8 +3,6 @@
 #include <iterator>
 #include <vector>
 
-struct aiNode;
-
 namespace GlProj
 {
 	namespace Utilities
@@ -18,19 +16,32 @@ namespace GlProj
 			std::vector<SceneNode>* children;
 		};
 
+		template<typename T>
+		bool operator==(const SceneNode<T>& x, const SceneNode<T>& y)
+		{
+			return x.children == y.children;
+		}
+		template<typename T>
+		bool operator!=(const SceneNode<T>& x, const SceneNode<T>& y)
+		{
+			return !(x == y);
+		}
+
 		///T - Composite data type for information stored, per node, in the scene graph
 		///Requires T is Semi-regular
 		template<typename T>
 		class SceneGraph
 		{
-			using Node = SceneNode<T>;
-			using ChildList = std::vector<Node>;
-			using ChildListIterator = ChildList::iterator;
+		public:
+			using node_type = SceneNode<T>;
+		private:
+			using ChildList = std::vector<node_type>;
+			using ChildListIterator = typename ChildList::iterator;
+			using size_type = typename ChildList::size_type;
 			ChildList rootNodes;
+			std::vector<ChildList*> allChildren;
 
-			static const constexpr unsigned long ReserveCutoff = 4;
-
-			void UpdateParent(Node* parent, ChildListIterator begin, ChildListIterator end) noexcept
+			void UpdateParent(node_type* parent, ChildListIterator begin, ChildListIterator end) noexcept
 			{
 				while (begin != end)
 				{
@@ -39,7 +50,7 @@ namespace GlProj
 				}
 			}
 
-			bool ReserveSpaceForChildren(ChildList& dest, ChildList::size_type count)
+			bool ReserveSpaceForChildren(ChildList& dest, size_type count)
 			{
 				if (count <= 0) return;
 				auto newSize = dest.size() + count;
@@ -48,16 +59,13 @@ namespace GlProj
 				bool previousNeedUpdate = newSize > previousCapacity;
 				if (previousNeedUpdate)
 				{
-					if (newSize - previousCapacity >= ReserveCutoff)
-					{
-						dest.reserve(newSize);
-					}
+					dest.reserve(newSize);
 				}
 
 				return previousNeedUpdate;
 			}
 
-			void OrphanChildren(Node& src)
+			void OrphanChildren(node_type& src)
 			{
 				auto previousSize = rootNodes.size();
 				ReserveSpaceForChildren(rootNodes, src.children->size());
@@ -67,7 +75,7 @@ namespace GlProj
 				src.children->clear();
 			}
 
-			void MergeChildren(Node* dest, Node& src)
+			void MergeChildren(node_type* dest, node_type& src)
 			{
 				if (dest == null)
 				{
@@ -86,10 +94,14 @@ namespace GlProj
 				sourceChildren.clear();
 			}
 
-			void DestroySubTree(Node& n)
+			void DestroySubTree(node_type& n)
 			{
 				if (n.children->size() != 0)
 				{
+					//Point at each child/sub-child. Delete from the leaves.
+					//Increment until past-the-end is reached. Move up to
+					//the parent, delete its children, advance to the neighbour.
+					//Continue until we reach the root of the tree.
 					auto current = &(*n.children)[0];
 					while (true)
 					{
@@ -97,33 +109,111 @@ namespace GlProj
 						if (distanceToEnd >= current->parent->children->size())
 						{
 							current = current->parent;
-							delete current->children;
 							if (current == &n) break;
+						KillChildrenAndAdvance:
+							KillChildren(*current);
 							++current;
 							continue;
 						}
 						if (current->children->size() > 0)
 						{
-							current = 
+							current = &(*current->children[0]);
 						}
 						else
 						{
-
+							goto KillChildrenAndAdvance;
 						}
 					}
 				}
+			}
+
+			void KillChildren(node_type& n)
+			{
+				allChildren.erase(std::find(allChildren.begin(), allChildren.end(), n.children));
 				delete n.children;
 			}
+
+			void DetachNodeFromParent(node_type& n)
+			{
+				ChildList& children = (n.parent == nullptr) ? rootNodes : *n.parent->children;
+				auto childPos = children.erase(std::find(children.begin(), children.end(), n));
+
+				while (childPos != children.end())
+				{
+					UpdateParent(&*childPos, childPos->children->begin(), childPos->children->end());
+					++childPos;
+				}
+			}
+
+			void DeleteNode(node_type& n)
+			{
+				KillChildren(n);
+				DetachNodeFromParent(n);
+			}
+
+			ChildList* CreateChildList()
+			{
+				allChildren.push_back(new ChildList);
+				return allChildren.back();
+			}
 		public:
+			
+
 			SceneGraph() noexcept = default;
 			~SceneGraph()
 			{
-				if (rootNodes.size() == 0) return;
+				for (auto& n : allChildren)
+				{
+					delete n;
+				}
+			}
 
-				for (auto& n : rootNodes)
+			template<typename U>
+			node_type* find(const U& x) const
+			{
+				auto finder = [&x](const auto& a)
+				{
+					return a.data == x;
+				};
+				auto found = std::find_if(rootNodes.begin(), rootNodes.end(), finder);
+				if (found != rootNodes.end()) return &*found;
+
+				for (auto& c : allChildren)
+				{
+					auto foundInChildren = std::find_if(c->begin(), c->end(), finder);
+					if (foundInChildren != c->end()) return &*foundInChildren;
+				}
+
+				return nullptr;
+			}
+
+			void insert(node_type* parent, const T& data)
+			{
+				ChildList& children = (parent == nullptr) ? rootNodes : *parent->children;
+
+				auto needUpdate = ReserveSpaceForChildren(children, 1);
+				children.push_back({data, parent, CreateChildList()});
+
+				if (needUpdate && parent != nullptr)
+				{
+					UpdateParent(parent, children.begin(), children.end() - 1);
+				}
+			}
+
+			node_type* remove(node_type* n, bool deleteSubtree = true)
+			{
+				auto parent = n->parent;
+				if (deleteSubtree)
 				{
 					DestroySubTree(n);
+					DeleteNode(n);
 				}
+				else
+				{
+					MergeChildren(n->parent, n);
+					DeleteNode(n);
+				}
+				return parent;
 			}
 		};
 	}

@@ -6,6 +6,7 @@
 #include "Material.hpp"
 #include "MeshManager.hpp"
 #include "Model.hpp"
+#include "SceneGraph.hpp"
 #include "Shader.hpp"
 #include "ShaderManager.hpp"
 #include "ShadingProgram.hpp"
@@ -61,6 +62,8 @@ void PrepareAndRunGame(GLFWwindow* window)
 		submeshes.push_back({ RegisterMesh(GetMeshManager(), bunny->mMeshes[i], bunny->mMeshes[i]->mName.C_Str()), 
 							  material });
 	}
+
+	GlProj::Utilities::TestSceneGraph();
 
 	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
 

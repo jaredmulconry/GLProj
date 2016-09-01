@@ -17,8 +17,8 @@ namespace GlProj
 			template<typename... Us>
 			SceneNode(SceneNode* p, std::vector<SceneNode>* c, Us&&... values)
 				:data(std::forward<Us>(values)...)
-				,parent(p)
-				,children(c)
+				, parent(p)
+				, children(c)
 			{}
 
 			T data;
@@ -75,7 +75,19 @@ namespace GlProj
 				return previousNeedUpdate;
 			}
 
-			node_type* OrphanChildren(node_type* src)
+			node_type* ConvertRefToNode(const std::pair<ChildList*, int>& ref)
+			{
+				return &(*ref.first)[ref.second];
+			}
+			std::pair<ChildList*, int> GetSemistableRef(node_type& n)
+			{
+				auto& childList = (n.parent == nullptr) ? rootNodes : *n.parent->children;
+				auto pos = std::find(childList.begin(), childList.end(), n);
+				auto offset = int(pos - childList.begin());
+				return std::make_pair(&childList, offset);
+			}
+
+			/*node_type* OrphanChildren(node_type* src)
 			{
 				auto previousSize = rootNodes.size();
 				auto rootPos = std::find(rootNodes.begin(), rootNodes.end(), *src);
@@ -96,24 +108,29 @@ namespace GlProj
 				src->children->clear();
 
 				return src;
-			}
+			}*/
 
 			node_type* MergeChildren(node_type* dest, node_type* src)
 			{
-				if (dest == nullptr)
-				{
-					return OrphanChildren(src);
-				}
-				auto& sourceChildren = *src->children;
-				auto& destChildren = *dest->children;
+				auto& destChildren = (dest == nullptr) ? rootNodes : *dest->children;
+				auto& srcChildren = *src->children;
+
+				auto stableSrc = GetSemistableRef(*src);
+
+				bool destContainsSrc = std::find(destChildren.begin(), destChildren.end(), *src) != destChildren.end();
 
 				auto previousSize = destChildren.size();
-				bool previousNeedUpdate = ReserveSpaceForChildren(destChildren, sourceChildren.size());
-				std::move(sourceChildren.begin(), sourceChildren.end(), std::back_inserter(destChildren));
+				bool previousNeedUpdate = ReserveSpaceForChildren(destChildren, srcChildren.size());
+				std::move(srcChildren.begin(), srcChildren.end(), std::back_inserter(destChildren));
 
 				auto parentUpdateBegin = previousNeedUpdate ? destChildren.begin() : (destChildren.begin() + previousSize);
 				UpdateParent(dest, parentUpdateBegin, destChildren.end());
-				sourceChildren.clear();
+				srcChildren.clear();
+
+				if (destContainsSrc)
+				{
+					src = ConvertRefToNode(stableSrc);
+				}
 
 				return src;
 			}
@@ -184,7 +201,7 @@ namespace GlProj
 				return allChildren.back();
 			}
 		public:
-			
+
 
 			SceneGraph() noexcept = default;
 			~SceneGraph()
@@ -200,7 +217,6 @@ namespace GlProj
 			{
 				return find(x, std::equal_to<>());
 			}
-
 			template<typename U, typename C>
 			node_type* find(const U& x, C c) const
 			{
@@ -217,6 +233,55 @@ namespace GlProj
 					if (foundInChildren != c->end()) return const_cast<node_type*>(&*foundInChildren);
 				}
 
+				return nullptr;
+			}
+
+			template<typename U>
+			node_type* find_child(node_type* p, const U& x)
+			{
+				return find_child(p, x, std::equal_to<>());
+			}
+			template<typename U, typename C>
+			node_type* find_child(node_type* p, const U& x, C c)
+			{
+				if (p == nullptr)
+				{
+					return find(x, c);
+				}
+
+				if (p->children->empty())
+				{
+					return nullptr;
+				}
+
+				auto current = &(*p->children)[0];
+				auto currentParent = p;
+				while (true)
+				{
+					auto distanceToEnd = size_type(current - &(*currentParent->children)[0]);
+					if (distanceToEnd >= currentParent->children->size())
+					{
+						current = currentParent;
+						currentParent = current->parent;
+						if (current == p) break;
+					MoveToNextSibling:
+						++current;
+						continue;
+					}
+					if (c(current->data, x))
+					{
+						return current;
+					}
+					if (current->children->size() > 0)
+					{
+						current = &((*current->children)[0]);
+						currentParent = current->parent;
+					}
+					else
+					{
+						goto MoveToNextSibling;
+					}
+				}
 				return nullptr;
 			}
 
@@ -264,8 +329,6 @@ namespace GlProj
 				return &children.back();
 			}
 
-			//TODO: rebuild top-to-bottom. Pointer invalidation is everywhere
-			//in this implementation.
 			node_type* remove(node_type* n, bool deleteSubtree = true)
 			{
 				auto parent = n->parent;
@@ -276,7 +339,7 @@ namespace GlProj
 				}
 				else
 				{
-					MergeChildren(n->parent, n);
+					n = MergeChildren(n->parent, n);
 					DeleteNode(*n);
 				}
 				return parent;

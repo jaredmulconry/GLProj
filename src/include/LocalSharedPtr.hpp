@@ -53,7 +53,7 @@ namespace GlProj
 
 			struct MakeFromFunc {};
 
-			template<typename T>
+			template<typename...>
 			using void_t = void;
 
 			template<typename T, typename = void>

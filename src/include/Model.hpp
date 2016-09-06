@@ -1,19 +1,36 @@
 #pragma once
-#include "glm\fwd.hpp"
+#include "glm\mat4x4.hpp"
 #include "LocalSharedPtr.hpp"
-#include "Material.hpp"
+#include "SceneGraph.hpp"
 #include <string>
 #include <utility>
 #include <vector>
-
-struct aiScene;
 
 namespace GlProj
 {
 	namespace Graphics
 	{
 		class Mesh;
+		class Material;
 		using GlProj::Utilities::LocalSharedPtr;
+		using GlProj::Utilities::SceneGraph;
+
+		struct ModelData
+		{
+			glm::mat4 transform;
+			std::vector<unsigned int> meshes;
+			std::string name;
+		};
+		inline bool operator==(const ModelData& x, const ModelData& y) noexcept
+		{
+			return x.transform == y.transform 
+				&& x.meshes == y.meshes 
+				&& x.name == y.name;
+		}
+		inline bool operator!=(const ModelData& x, const ModelData& y) noexcept
+		{
+			return !(x == y);
+		}
 
 		struct Renderable
 		{
@@ -24,15 +41,19 @@ namespace GlProj
 		class Model
 		{
 			std::vector<Renderable> submeshes;
+			SceneGraph<ModelData> hierarchy;
+			using hierarchy_node = SceneGraph<ModelData>::node_type;
+
+			void DrawSubmesh(hierarchy_node* n, glm::mat4 transform) const;
 		public:
 			Model() = default;
-			Model(const std::vector<Renderable>&);
+			Model(const std::vector<Renderable>&, SceneGraph<ModelData>&&);
 
-			void SetMatrix(const UniformInformation& uniform, const glm::mat4& matrix);
+			const SceneGraph<ModelData>& GetHierarchy() const
+			{
+				return hierarchy;
+			}
 
-			void Draw();
-
-			void DrawNoBind();
 		};
 	}
 }

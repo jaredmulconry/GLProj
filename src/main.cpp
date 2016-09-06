@@ -63,6 +63,7 @@ void PrepareAndRunGame(GLFWwindow* window)
 							  material });
 	}
 
+
 	GlProj::Utilities::TestSceneGraph();
 
 	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);

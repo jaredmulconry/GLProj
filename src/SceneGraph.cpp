@@ -28,7 +28,7 @@ namespace GlProj
 			std::vector<SceneNode<int>*> nodes;
 			t1.find_all(0, std::equal_to<>(), nodes);
 			nodes.clear();
-			t1.find_all_children(n1, 0, std::equal_to<>(), nodes);
+			t1.find_all_children(n1, 0, std::equal_to<>());
 			nodes.clear();
 			n3 = t1.parent_to(n4, n3);
 			t1.remove(t1.find(1729), false);

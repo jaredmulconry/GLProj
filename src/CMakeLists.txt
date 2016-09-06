@@ -18,5 +18,7 @@ add_sources(include/MeshManager.hpp MeshManager.cpp)
 add_sources(include/Material.hpp Material.cpp)
 add_sources(include/LocalSharedPtr.hpp LocalSharedPtr.cpp)
 add_sources(include/SceneGraph.hpp SceneGraph.cpp)
+add_sources(include/Camera.hpp Camera.cpp)
+add_sources(include/Transform.hpp Transform.cpp)
 
 #file(COPY ./data/ DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/data)

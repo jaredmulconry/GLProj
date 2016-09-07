@@ -26,7 +26,7 @@ namespace GlProj
 			auto f3 = t1.find_child(n3, 2);
 			auto f4 = t1.find_child(n1, 0);
 			std::vector<SceneNode<int>*> nodes;
-			t1.find_all(0, std::equal_to<>(), nodes);
+			t1.find_all_cached(0, std::equal_to<>(), nodes);
 			nodes.clear();
 			t1.find_all_children(n1, 0, std::equal_to<>());
 			nodes.clear();

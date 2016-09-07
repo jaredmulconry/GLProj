@@ -10,24 +10,6 @@ namespace GlProj
 {
 	namespace Utilities
 	{
-		namespace detail
-		{
-			template<typename...>
-			using void_t = void;
-
-			template<typename C, typename, typename...>
-			struct is_callable_helper : std::false_type
-			{};
-
-			template<typename C, typename... ArgTypes>
-			struct is_callable_helper<C, void_t<decltype(std::declval<C>()(std::declval<ArgTypes>()...))>, ArgTypes...>
-				: std::true_type
-			{};
-
-			template<typename C, typename... Args>
-			using is_callable = is_callable_helper<C, void, Args...>;
-		}
-
 		///Requires T is Semi-regular
 		template<typename T>
 		struct SceneNode
@@ -157,21 +139,20 @@ namespace GlProj
 				return o;
 			}
 			template<typename U>
-			void find_all(const U& x, std::vector<node_type*>& out) const
+			void find_all_cached(const U& x, std::vector<node_type*>& out) const
 			{
 				find_all(x, std::equal_to<>(), out);
 			}
 
-			template<typename U, typename C,
-				typename = std::enable_if_t<detail::is_callable<C, T&, const U&>::value>>
-				std::vector<node_type*> find_all(const U& x, C c) const
+			template<typename U, typename C>
+			std::vector<node_type*> find_all(const U& x, C c) const
 			{
 				std::vector<node_type*> o;
-				find_all(x, c, o);
+				find_all_cached(x, c, o);
 				return o;
 			}
 			template<typename U, typename C>
-			void find_all(const U& x, C c, std::vector<node_type*>& out) const
+			void find_all_cached(const U& x, C c, std::vector<node_type*>& out) const
 			{
 				auto& result = out;
 				auto insertIterator = std::back_inserter(result);
@@ -200,25 +181,24 @@ namespace GlProj
 				return o;
 			}
 			template<typename U>
-			void find_all_children(node_type* p, const U& x, std::vector<node_type*>& out) const
+			void find_all_children_cached(node_type* p, const U& x, std::vector<node_type*>& out) const
 			{
 				find_all_children(p, x, std::equal_to<>(), out);
 			}
 
-			template<typename U, typename C,
-				typename = std::enable_if_t<detail::is_callable<C, T&, const U&>::value>>
-				std::vector<node_type*> find_all_children(node_type* p, const U& x, C c) const
+			template<typename U, typename C>
+			std::vector<node_type*> find_all_children(node_type* p, const U& x, C c) const
 			{
 				std::vector<node_type*> o;
-				find_all_children(p, x, c, o);
+				find_all_children_cached(p, x, c, o);
 				return o;
 			}
 			template<typename U, typename C>
-			void find_all_children(node_type* p, const U& x, C c, std::vector<node_type*>& out) const
+			void find_all_children_cached(node_type* p, const U& x, C c, std::vector<node_type*>& out) const
 			{
 				if (p == nullptr)
 				{
-					find_all(x, c, out);
+					find_all_cached(x, c, out);
 				}
 
 				if (p->children->empty())

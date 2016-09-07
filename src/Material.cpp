@@ -1,6 +1,7 @@
 #include "Material.hpp"
 #include "gl_core_4_1.h"
 #include "GLFW\glfw3.h"
+#include "Camera.hpp"
 #include "ShadingProgram.hpp"
 #include "Texture.hpp"
 #include "Sampler.hpp"
@@ -332,6 +333,10 @@ namespace GlProj
 				program->Bind();
 			}
 		}
+		const ShadingProgram * Material::GetProgram() const noexcept
+		{
+			return program.get();
+		}
 		void Material::SetUniform(const UniformInformation& u, GLint i)
 		{
 			SetUniform(u, &i, 1);
@@ -456,6 +461,39 @@ namespace GlProj
 		GLint TextureSlotToGL(TextureSlot s)
 		{
 			return static_cast<GLint>(s);
+		}
+		void ApplyTransformUniforms(Material& mat, const glm::mat4& model, const Camera& cam)
+		{
+			static const std::string ModelName("model_transform");
+			static const std::string ViewName("view_transform");
+			static const std::string ProjectionName("projection_transform");
+			static const std::string MVPName("mvp_transform");
+
+			auto prog = mat.GetProgram();
+			//Model matrix
+			auto modelUniform = prog->FindUniform(ModelName);
+			if (modelUniform != prog->UniformsEnd())
+			{
+				mat.SetUniform(*modelUniform, model);
+			}
+			//View matrix
+			auto viewUniform = prog->FindUniform(ViewName);
+			if (viewUniform != prog->UniformsEnd())
+			{
+				mat.SetUniform(*viewUniform, cam.View());
+			}
+			//Projection matrix
+			auto projectionUniform = prog->FindUniform(ProjectionName);
+			if (projectionUniform != prog->UniformsEnd())
+			{
+				mat.SetUniform(*projectionUniform, cam.Projection());
+			}
+			//Model-View-Projection matrix
+			auto mvpUniform = prog->FindUniform(MVPName);
+			if (mvpUniform != prog->UniformsEnd())
+			{
+				mat.SetUniform(*mvpUniform, cam.Projection() * model);
+			}
 		}
 	}
 }

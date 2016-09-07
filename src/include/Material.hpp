@@ -7,6 +7,7 @@ namespace GlProj
 {
 	namespace Graphics
 	{
+		struct Camera;
 		class ShadingProgram;
 		class Texture;
 		class Sampler;
@@ -40,6 +41,7 @@ namespace GlProj
 			Material& operator=(const LocalSharedPtr<ShadingProgram>&);
 
 			void Bind() const;
+			const ShadingProgram* GetProgram() const noexcept;
 			
 			void SetUniform(const UniformInformation&, GLint);
 			void SetUniform(const UniformInformation&, GLuint);
@@ -62,5 +64,7 @@ namespace GlProj
 			void SetUniform(const UniformInformation&, const glm::mat3*, int);
 			void SetUniform(const UniformInformation&, const glm::mat4*, int);
 		};
+
+		void ApplyTransformUniforms(Material&, const glm::mat4&, const Camera&);
 	}
 }

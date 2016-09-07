@@ -63,6 +63,13 @@ namespace GlProj
 			void SetUniform(const UniformInformation&, const glm::mat2*, int);
 			void SetUniform(const UniformInformation&, const glm::mat3*, int);
 			void SetUniform(const UniformInformation&, const glm::mat4*, int);
+
+			friend bool operator==(const Material&, const Material&) noexcept;
+			friend bool operator!=(const Material&, const Material&) noexcept;
+			friend bool operator<(const Material&, const Material&) noexcept;
+			friend bool operator<=(const Material&, const Material&) noexcept;
+			friend bool operator>(const Material&, const Material&) noexcept;
+			friend bool operator>=(const Material&, const Material&) noexcept;
 		};
 
 		void ApplyTransformUniforms(Material&, const glm::mat4&, const Camera&);

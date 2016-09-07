@@ -14,7 +14,6 @@ namespace GlProj
 			{
 				auto& renderer = submeshes[m];
 				renderer.mesh->Bind();
-				mat.Bind();
 				ApplyTransformUniforms(mat, transform, cam);
 			}
 		}
@@ -34,7 +33,9 @@ namespace GlProj
 						SceneGraph<ModelData>&& hierarchy)
 			:submeshes(renderables)
 			,hierarchy(std::move(hierarchy))
-		{}
+		{
+
+		}
 		void Model::Draw(const Camera& cam) const
 		{
 

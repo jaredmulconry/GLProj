@@ -462,6 +462,33 @@ namespace GlProj
 		{
 			return static_cast<GLint>(s);
 		}
+		bool operator==(const Material& x, const Material& y) noexcept
+		{
+			return x.program == y.program;
+		}
+		bool operator!=(const Material& x, const Material& y) noexcept
+		{
+			return !(x == y);
+		}
+		bool operator<(const Material& x, const Material& y) noexcept
+		{
+			if (x == y) return false;
+			if (x.program == nullptr) return true;
+			if (y.program == nullptr) return false;
+			return x.program->GetHandle() < y.program->GetHandle();
+		}
+		bool operator<=(const Material& x, const Material& y) noexcept
+		{
+			return !(y < x);
+		}
+		bool operator>(const Material& x, const Material& y) noexcept
+		{
+			return y < x;
+		}
+		bool operator>=(const Material& x, const Material& y) noexcept
+		{
+			return !(x < y);
+		}
 		void ApplyTransformUniforms(Material& mat, const glm::mat4& model, const Camera& cam)
 		{
 			static const std::string ModelName("model_transform");

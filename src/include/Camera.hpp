@@ -50,9 +50,11 @@ namespace GlProj
 				Orthographic orthographic;
 				Perspective perspective;
 			} data;
-			float near;
-			float far;
+			float nearPlane;
+			float farPlane;
 			CameraType type;
 		};
+
+
 	}
 }

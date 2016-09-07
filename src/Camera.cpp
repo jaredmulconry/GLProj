@@ -21,13 +21,13 @@ namespace GlProj
 				std::terminate();
 				return glm::mat4(1.0f);
 			case CameraType::Perspective:
-				return glm::perspective(data.perspective.fov, data.perspective.aspect, near, far);
+				return glm::perspective(data.perspective.fov, data.perspective.aspect, nearPlane, farPlane);
 			case CameraType::Orthographic:
 				return glm::ortho(-data.orthographic.size.x / 2.0f,
 					data.orthographic.size.x / 2.0f,
 					-data.orthographic.size.y / 2.0f,
 					data.orthographic.size.y / 2.0f,
-					near, far);
+					nearPlane, farPlane);
 			}
 		}
 		glm::mat4 Camera::ViewProjection() const noexcept

@@ -15,5 +15,6 @@ namespace GlProj
 		};
 
 		glm::mat4 ToMatrix(const Transform&) noexcept;
+		Transform FromMatrix(const glm::mat4&) noexcept;
 	}
 }

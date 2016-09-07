@@ -1,6 +1,9 @@
 #include "Transform.hpp"
 #include "glm\matrix.hpp"
 #include "glm\gtc\matrix_transform.hpp"
+#include "glm/gtx/matrix_decompose.hpp"
+#include "glm/vec3.hpp"
+#include "glm/vec4.hpp"
 
 namespace GlProj
 {
@@ -12,6 +15,14 @@ namespace GlProj
 			result = glm::scale(result, t.scale);
 			result *= glm::mat4_cast(t.rotation);
 			result = glm::translate(result, t.position);
+			return result;
+		}
+		Transform FromMatrix(const glm::mat4& m) noexcept
+		{
+			Transform result;
+			glm::vec3 skew;
+			glm::vec4 perspective;
+			glm::decompose(m, result.scale, result.rotation, result.position, skew, perspective);
 			return result;
 		}
 	}

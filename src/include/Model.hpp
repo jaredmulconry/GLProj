@@ -10,6 +10,7 @@ namespace GlProj
 {
 	namespace Graphics
 	{
+		struct Camera;
 		class Mesh;
 		class Material;
 		using GlProj::Utilities::LocalSharedPtr;
@@ -44,7 +45,8 @@ namespace GlProj
 			SceneGraph<ModelData> hierarchy;
 			using hierarchy_node = SceneGraph<ModelData>::node_type;
 
-			void DrawSubmesh(hierarchy_node* n, glm::mat4 transform) const;
+			void DrawSubmesh(hierarchy_node*, const Camera&, glm::mat4, Material&) const;
+			void Model::DrawSubmesh(hierarchy_node * n, const Camera&, glm::mat4 transform) const;
 		public:
 			Model() = default;
 			Model(const std::vector<Renderable>&, SceneGraph<ModelData>&&);
@@ -54,6 +56,8 @@ namespace GlProj
 				return hierarchy;
 			}
 
+			void Draw(const Camera&) const;
+			void Draw(const Camera&, Material&) const;
 		};
 	}
 }

@@ -20,5 +20,6 @@ add_sources(include/LocalSharedPtr.hpp LocalSharedPtr.cpp)
 add_sources(include/SceneGraph.hpp SceneGraph.cpp)
 add_sources(include/Camera.hpp Camera.cpp)
 add_sources(include/Transform.hpp Transform.cpp)
+add_sources(include/RenderManager.hpp RenderManager.cpp)
 
 #file(COPY ./data/ DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/data)

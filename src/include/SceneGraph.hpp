@@ -10,6 +10,9 @@ namespace GlProj
 {
 	namespace Utilities
 	{
+		template<typename T>
+		class SceneGraph;
+
 		///Requires T is Semi-regular
 		template<typename T>
 		struct SceneNode
@@ -38,6 +41,154 @@ namespace GlProj
 			return !(x == y);
 		}
 
+		///Depth-first iterator over a scene graph
+		template<typename T>
+		struct SceneGraphIterator : 
+			public std::iterator<std::forward_iterator_tag,
+								 T>
+		{
+			friend class SceneGraph<T>;
+			SceneNode<T>* current;
+			SceneGraph<T>* owner;
+
+			reference operator*()
+			{
+				return current->data;
+			}
+			reference operator*() const
+			{
+				return current->data;
+			}
+
+			pointer operator->()
+			{
+				return &current->data;
+			}
+			pointer operator->()const
+			{
+				return &current->data;
+			}
+
+			SceneGraphIterator& operator++()
+			{
+				if (!current->children->empty())
+				{
+					current = current->children->data();
+				}
+				else
+				{
+					auto* selfList = (current->parent == nullptr) ? &owner->rootNodes : current->parent->children;
+
+					++current;
+					while (current == (selfList->data() + selfList->size()))
+					{
+						if (current->parent == nullptr) return *this;
+
+						selfList = (current->parent->parent == nullptr) ? &owner->rootNodes : current->parent->parent->children;
+						current = current->parent + 1;
+					}
+				}
+
+				return *this;
+			}
+			SceneGraphIterator operator++(int)
+			{
+				auto cpy = *this;
+				++(*this);
+				return cpy;
+			}
+
+			friend bool operator==(const SceneGraphIterator& x, const SceneGraphIterator& y) noexcept
+			{
+				return x.current == y.current && x.owner == y.owner;
+			}
+			friend bool operator!=(const SceneGraphIterator& x, const SceneGraphIterator& y) noexcept
+			{
+				return !(x == y);
+			}
+		};
+		///Depth-first iterator over a scene graph
+		template<typename T>
+		struct SceneGraphConstIterator :
+			public std::iterator<std::forward_iterator_tag,
+			const T>
+		{
+			friend class SceneGraph<T>;
+			friend struct SceneGraphIterator<T>;
+			SceneNode<T>* current;
+			SceneGraph<T>* owner;
+
+			SceneGraphConstIterator() noexcept = default;
+			explicit SceneGraphConstIterator(const SceneGraphIterator<T>& x)
+				:current(x.current)
+				,owner(x.owner)
+			{}
+
+			SceneGraphConstIterator& operator=(const SceneGraphIterator<T>& x)
+			{
+				current = x.current;
+				owner = x.owner;
+
+				return *this;
+			}
+
+			reference operator*()
+			{
+				return current->data;
+			}
+			reference operator*() const
+			{
+				return current->data;
+			}
+
+			pointer operator->()
+			{
+				return &current->data;
+			}
+			pointer operator->()const
+			{
+				return &current->data;
+			}
+
+			SceneGraphConstIterator& operator++()
+			{
+				if (!current->children->empty())
+				{
+					current = current->children->data();
+				}
+				else
+				{
+					auto* selfList = (current->parent == nullptr) ? &owner->rootNodes : current->parent->children;
+
+					++current;
+					while (current == (selfList->data() + selfList->size()))
+					{
+						if (current->parent == nullptr) return *this;
+
+						selfList = (current->parent->parent == nullptr) ? &owner->rootNodes : current->parent->parent->children;
+						current = current->parent + 1;
+					}
+				}
+
+				return *this;
+			}
+			SceneGraphConstIterator operator++(int)
+			{
+				auto cpy = *this;
+				++(*this);
+				return cpy;
+			}
+
+			friend bool operator==(const SceneGraphConstIterator& x, const SceneGraphConstIterator& y) noexcept
+			{
+				return x.current == y.current && x.owner == y.owner;
+			}
+			friend bool operator!=(const SceneGraphConstIterator& x, const SceneGraphConstIterator& y) noexcept
+			{
+				return !(x == y);
+			}
+		};
+
 		///T - Composite data type for information stored, per node, in the scene graph
 		///Requires T is Semi-regular
 		template<typename T>
@@ -47,6 +198,8 @@ namespace GlProj
 			using node_type = SceneNode<T>;
 			using ChildList = std::vector<node_type>;
 			using ChildListIterator = typename ChildList::iterator;
+			using GraphIterator = SceneGraphIterator<T>;
+			using GraphConstIterator = SceneGraphConstIterator<T>;
 
 			SceneGraph() noexcept = default;
 			~SceneGraph()
@@ -55,6 +208,36 @@ namespace GlProj
 				{
 					delete n;
 				}
+			}
+
+			GraphIterator begin()
+			{
+				return{ rootNodes.data(),
+						this};
+			}
+			GraphConstIterator begin() const
+			{
+				return{	const_cast<node_type*>(rootNodes.data()), 
+						const_cast<SceneGraph<T>*const>(this)};
+			}
+			GraphConstIterator cbegin() const
+			{
+				return begin();
+			}
+
+			GraphIterator end()
+			{
+				return{ rootNodes.data() + rootNodes.size(),
+						this };
+			}
+			GraphConstIterator end() const
+			{
+				return{ const_cast<node_type*>(rootNodes.data() + rootNodes.size()), 
+						const_cast<SceneGraph<T>*const>(this) };
+			}
+			GraphConstIterator cend() const
+			{
+				return end();
 			}
 
 			template<typename U>

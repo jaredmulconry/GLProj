@@ -45,8 +45,6 @@ namespace GlProj
 			SceneGraph<ModelData> hierarchy;
 			using hierarchy_node = SceneGraph<ModelData>::node_type;
 
-			void DrawSubmesh(hierarchy_node*, const Camera&, glm::mat4, Material&) const;
-			void Model::DrawSubmesh(hierarchy_node * n, const Camera&, glm::mat4 transform) const;
 		public:
 			Model() = default;
 			Model(const std::vector<Renderable>&, SceneGraph<ModelData>&&);

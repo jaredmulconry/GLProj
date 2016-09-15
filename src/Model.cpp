@@ -1,3 +1,5 @@
+#include "gl_core_4_1.h"
+#include "GLFW\glfw3.h"
 #include "Model.hpp"
 #include "Material.hpp"
 #include "Mesh.hpp"
@@ -7,28 +9,6 @@ namespace GlProj
 {
 	namespace Graphics
 	{
-		void Model::DrawSubmesh(hierarchy_node * n, const Camera& cam, glm::mat4 transform, Material& mat) const
-		{
-			transform *= n->data.transform;
-			for (auto m : n->data.meshes)
-			{
-				auto& renderer = submeshes[m];
-				renderer.mesh->Bind();
-				ApplyTransformUniforms(mat, transform, cam);
-			}
-		}
-		void Model::DrawSubmesh(hierarchy_node * n, const Camera& cam, glm::mat4 transform) const
-		{
-			transform *= n->data.transform;
-			for (auto m : n->data.meshes)
-			{
-				auto& renderer = submeshes[m];
-				renderer.mesh->Bind();
-				renderer.material->Bind();
-				ApplyTransformUniforms(*renderer.material, transform, cam);
-
-			}
-		}
 		Model::Model(const std::vector<Renderable>& renderables,
 						SceneGraph<ModelData>&& hierarchy)
 			:submeshes(renderables)
@@ -39,6 +19,7 @@ namespace GlProj
 		void Model::Draw(const Camera& cam) const
 		{
 
+			//glDrawElements(GL_TRIANGLES, submeshes[0].mesh->FaceCount(), GL_UNSIGNED_INT, nullptr);
 		}
 		void Model::Draw(const Camera& cam, Material& mat) const
 		{

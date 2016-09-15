@@ -14,9 +14,10 @@ namespace GlProj
 			{
 				throw std::runtime_error("Provided mesh has no positions or faces.");
 			}
+			faceCount = mesh->mNumFaces;
 
 			arrayBuffer.Bind();
-			indices = MeshIndexBuffer(mesh->mNumFaces, mesh->mFaces);
+			indices = MeshIndexBuffer(faceCount, mesh->mFaces);
 
 			vertexData.resize(ReservedVertexSlots);
 

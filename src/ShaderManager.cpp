@@ -1,17 +1,27 @@
 #include "ShaderManager.hpp"
 #include "gl_core_4_1.h"
-#include "GLFW\glfw3.h"
+#include "GLFW/glfw3.h"
 #include "Shader.hpp"
 #include "ShadingProgram.hpp"
 #include <algorithm>
 #include <cerrno>
 #include <cstdio>
-#include <experimental\filesystem>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
 
-using namespace std::experimental::filesystem;
+#if !defined(__GNUG__) && !defined(__clang__)
+#include <experimental/filesystem>
+#endif
+std::string NormalisePath(const std::string& path)
+{
+#if defined(__GNUG__) || defined(__clang__)
+	return path;
+#else
+	return std::experimental::filesystem::canonical(path).u8string();
+#endif
+}
+
 
 namespace GlProj
 {
@@ -27,7 +37,11 @@ namespace GlProj
 			LocalSharedPtr<Shader> RegisterShader(GLenum type, GLuint handle, const std::string& name)
 			{
 				auto newPtr = make_localshared<Shader>(type, handle);
-				registeredShaders.insert_or_assign(name, newPtr);
+				auto inserted = registeredShaders.insert({name, newPtr});
+				if(!inserted.second)
+				{
+					(*inserted.first).second = newPtr;
+				}
 				return std::move(newPtr);
 			}
 			LocalSharedPtr<Shader> FindByName(const std::string& name) const
@@ -141,7 +155,7 @@ namespace GlProj
 				throw std::runtime_error(err);
 			}
 
-			return manager->RegisterShader(shaderType, shaderID, canonical(path).u8string());
+			return manager->RegisterShader(shaderType, shaderID, NormalisePath(path));
 		}
 		LocalSharedPtr<Shader> RegisterShader(ShaderManager* manager, GLenum type, GLuint handle, const std::string& name, bool replace)
 		{
@@ -159,7 +173,7 @@ namespace GlProj
 
 		LocalSharedPtr<Shader> FindCachedShaderByPath(const ShaderManager* manager, const std::string& path)
 		{
-			auto canonicalPath = canonical(path).u8string();
+			auto canonicalPath = NormalisePath(path);
 
 			return manager->FindByName(canonicalPath);
 		}

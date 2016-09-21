@@ -1,6 +1,6 @@
 #include "MeshIndexBuffer.hpp"
-#include "assimp\mesh.h"
-#include "assimp\scene.h"
+#include "assimp/mesh.h"
+#include "assimp/scene.h"
 #include <vector>
 
 namespace GlProj

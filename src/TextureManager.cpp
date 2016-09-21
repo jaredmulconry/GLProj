@@ -1,16 +1,27 @@
 #include "TextureManager.hpp"
 #include "gl_core_4_1.h"
-#include "GLFW\glfw3.h"
+#include "GLFW/glfw3.h"
 #include "Texture.hpp"
 #include "Sampler.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-#include <experimental\filesystem>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
 
-using namespace std::experimental::filesystem;
+
+#if !defined(__GNUG__) && !defined(__clang__)
+#include <experimental/filesystem>
+#endif
+std::string NormalisePath(const std::string& path)
+{
+#if defined(__GNUG__) || defined(__clang__)
+	return path;
+#else
+	return std::experimental::filesystem::canonical(path).u8string();
+#endif
+}
+
 using namespace GlProj::Utilities;
 
 namespace GlProj
@@ -139,7 +150,7 @@ namespace GlProj
 				glTexImage1D(textureDimensions, 0, internalFormat, width, 0, externalFormat, GL_UNSIGNED_BYTE, pixelData.get());
 			}
 
-			return manager->RegisterTexture(textureDimensions, handle, canonical(path).u8string());
+			return manager->RegisterTexture(textureDimensions, handle, NormalisePath(path));
 		}
 		LocalSharedPtr<Texture> RegisterTexture(TextureManager* manager, GLenum type, GLuint handle, const std::string& name, bool replace)
 		{
@@ -157,7 +168,7 @@ namespace GlProj
 
 		LocalSharedPtr<Texture> FindCachedTextureByPath(const TextureManager* manager, const std::string& path)
 		{
-			auto canonicalPath = canonical(path).u8string();
+			auto canonicalPath = NormalisePath(path);
 			
 			return manager->FindByName(canonicalPath);
 		}

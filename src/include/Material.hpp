@@ -1,6 +1,6 @@
 #pragma once
 #include "OpenGLTypes.hpp"
-#include "glm\fwd.hpp"
+#include "glm/fwd.hpp"
 #include "LocalSharedPtr.hpp"
 
 namespace GlProj

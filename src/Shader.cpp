@@ -1,6 +1,6 @@
 #include "Shader.hpp"
 #include "gl_core_4_1.h"
-#include "GLFW\glfw3.h"
+#include "GLFW/glfw3.h"
 
 namespace GlProj
 {

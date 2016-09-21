@@ -18,6 +18,11 @@ macro (add_sources)
     endif()
 endmacro()
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
+		CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
+endif()
+
 #linking and include dependencies
 add_subdirectory(glfw)
 add_subdirectory(glm)

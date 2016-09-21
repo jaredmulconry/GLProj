@@ -48,9 +48,14 @@ namespace GlProj
 								 T>
 		{
 			friend class SceneGraph<T>;
+			using base_t = std::iterator<std::forward_iterator_tag,
+			      					T>;
+			using reference = typename base_t::reference;
+			using pointer = typename base_t::reference;
+
 			SceneNode<T>* current;
 			SceneGraph<T>* owner;
-
+			
 			reference operator*()
 			{
 				return current->data;
@@ -115,6 +120,10 @@ namespace GlProj
 		{
 			friend class SceneGraph<T>;
 			friend struct SceneGraphIterator<T>;
+			using base_t = std::iterator<std::forward_iterator_tag,
+			      					T>;
+			using reference = typename base_t::reference;
+			using pointer = typename base_t::reference;
 			SceneNode<T>* current;
 			SceneGraph<T>* owner;
 

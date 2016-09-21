@@ -481,10 +481,6 @@ namespace GlProj
 				return objRef < x.InternalGetPtr();
 			}
 
-			detail::RefBase* InternalGetRef() const
-			{
-				return ref;
-			}
 			T* InternalGetPtr() const
 			{
 				return objRef;

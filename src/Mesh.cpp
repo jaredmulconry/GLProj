@@ -1,6 +1,6 @@
 #include "Mesh.hpp"
-#include "assimp\scene.h"
-#include "assimp\anim.h"
+#include "assimp/scene.h"
+#include "assimp/anim.h"
 #include <algorithm>
 #include <stdexcept>
 

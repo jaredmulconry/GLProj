@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cerrno>
 #include <cstdio>
+#include <cstring>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
@@ -13,6 +14,9 @@
 #if !defined(__GNUG__) && !defined(__clang__)
 #include <experimental/filesystem>
 #endif
+
+static std::string NormalisePath(const std::string& path);
+
 std::string NormalisePath(const std::string& path)
 {
 #if defined(__GNUG__) || defined(__clang__)
@@ -87,9 +91,8 @@ namespace GlProj
 				}
 			}
 
-			FILE* shaderFile;
-
-			auto err = fopen_s(&shaderFile, path.c_str(), "r");
+			FILE* shaderFile = std::fopen(path.c_str(), "r");
+			auto err = errno;
 			if(err != 0)
 			{
 				std::string errMessage = "Shader file could not be opened.\n";
@@ -101,7 +104,7 @@ namespace GlProj
 
 				throw std::runtime_error(errMessage);
 			}
-			std::unique_ptr<FILE, void(*)(FILE*)> fileHandle(shaderFile, [](FILE* f) { fclose(f); });
+			std::unique_ptr<FILE, void(*)(FILE*)> fileHandle(shaderFile, [](FILE* f) { std::fclose(f); });
 
 			auto begin = ftell(fileHandle.get());
 			if(fseek(fileHandle.get(), 0, SEEK_END) != 0)

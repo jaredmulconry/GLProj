@@ -1,6 +1,6 @@
 #include "ShadingProgram.hpp"
 #include "gl_core_4_1.h"
-#include "GLFW\glfw3.h"
+#include "GLFW/glfw3.h"
 #include "Mesh.hpp"
 #include "Shader.hpp"
 #include <algorithm>

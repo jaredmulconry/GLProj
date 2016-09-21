@@ -13,6 +13,9 @@
 #if !defined(__GNUG__) && !defined(__clang__)
 #include <experimental/filesystem>
 #endif
+
+static std::string NormalisePath(const std::string& path);
+
 std::string NormalisePath(const std::string& path)
 {
 #if defined(__GNUG__) || defined(__clang__)

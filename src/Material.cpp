@@ -1,13 +1,13 @@
 #include "Material.hpp"
 #include "gl_core_4_1.h"
-#include "GLFW\glfw3.h"
+#include "GLFW/glfw3.h"
 #include "Camera.hpp"
 #include "ShadingProgram.hpp"
 #include "Texture.hpp"
 #include "Sampler.hpp"
 #include "ShadingProgram.hpp"
 #include "glm.hpp"
-#include "glm\gtc\type_ptr.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 #include <algorithm>
 #include <iterator>

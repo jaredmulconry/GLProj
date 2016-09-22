@@ -21,6 +21,7 @@ endmacro()
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
 		CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
+	set(_GLFW_HAS_XF86VM ON CACHE BOOL FORCE)
 endif()
 
 #linking and include dependencies

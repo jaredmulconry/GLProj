@@ -20,7 +20,11 @@ namespace GlProj
 			LocalSharedPtr<Mesh> RegisterMesh(aiMesh* mesh, const std::string& name)
 			{
 				auto newPtr = make_localshared<Mesh>(mesh);
-				registeredMeshes.insert_or_assign(name, newPtr);
+				auto inserted = registeredMeshes.insert({ name, newPtr });
+				if (!inserted.second)
+				{
+					inserted.first->second = newPtr;
+				}
 				return std::move(newPtr);
 			}
 			LocalSharedPtr<Mesh> FindByName(const std::string& name) const

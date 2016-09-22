@@ -20,7 +20,12 @@
 #include <stdexcept>
 #include <vector>
 
-using namespace GlProj::Graphics; 
+using namespace GlProj::Graphics;
+
+void glfwExecErrorCallback(int, const char* msg)
+{
+	std::cerr << "glfw error: " << msg << std::endl;
+}
 
 LocalSharedPtr<Material> GetDefaultMaterial()
 {
@@ -81,6 +86,7 @@ void PrepareAndRunGame(GLFWwindow* window)
 int main()
 try
 {
+	glfwSetErrorCallback(glfwExecErrorCallback);
 	if (glfwInit() == GLFW_FALSE)
 	{
 		return EXIT_FAILURE;

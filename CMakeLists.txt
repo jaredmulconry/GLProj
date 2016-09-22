@@ -21,7 +21,7 @@ endmacro()
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
 		CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
-	add_definitions(-D_GLFW_HAS_XF86VM)
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lXrandr -lX11 -lXxf86vm")
 endif()
 
 #linking and include dependencies

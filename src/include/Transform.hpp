@@ -1,7 +1,7 @@
 #pragma once
-#include "glm\fwd.hpp"
-#include "glm\vec3.hpp"
-#include "glm\gtc\quaternion.hpp"
+#include "glm/fwd.hpp"
+#include "glm/vec3.hpp"
+#include "glm/gtc/quaternion.hpp"
 
 namespace GlProj
 {

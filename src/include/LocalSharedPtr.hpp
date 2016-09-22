@@ -226,9 +226,9 @@ namespace GlProj
 				typename = std::enable_if_t<std::is_convertible<U*, T*>::value>>
 				LocalSharedPtr& operator=(const LocalSharedPtr<U>& x)
 			{
-				if (x.ref != ref)
+				if (x.InternalGetRef() != ref)
 				{
-					InternalReset(x.objRef, x.ref);
+					InternalReset(x.InternalGetPtr(), x.InternalGetRef());
 
 					Increment();
 				}
@@ -237,12 +237,12 @@ namespace GlProj
 				typename = std::enable_if_t<std::is_convertible<U*, T*>::value>>
 				LocalSharedPtr& operator=(LocalSharedPtr<U>&& x)
 			{
-				if (x.ref != ref)
+				if (x.InternalGetRef() != ref)
 				{
-					InternalReset(x.objRef, x.ref);
+					InternalReset(x.InternalGetPtr(), x.InternalGetRef());
 
-					x.objRef = nullptr;
-					x.ref = nullptr;
+					x.InternalSetPtr(nullptr);
+					x.InternalSetRef(nullptr);
 				}
 			}
 
@@ -291,6 +291,10 @@ namespace GlProj
 			detail::RefBase* InternalGetRef() const
 			{
 				return ref;
+			}
+			void InternalSetRef(detail::RefBase* ptr)
+			{
+				ref = ptr;
 			}
 			T* InternalGetPtr() const
 			{

@@ -94,9 +94,6 @@ try
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 #ifdef _DEBUG
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif
@@ -107,6 +104,12 @@ try
 	{
 		return EXIT_FAILURE;
 	}
+
+	int contextMajorVersion = glfwGetWindowAttrib(win, GLFW_CONTEXT_VERSION_MAJOR);
+	int contextMinorVersion = glfwGetWindowAttrib(win, GLFW_CONTEXT_VERSION_MINOR);
+	
+	std::cout << "Major version is " << contextMajorVersion << '\n';
+	std::cout << "Minor version is " << contextMinorVersion << std::endl;
 
 	glfwMakeContextCurrent(win);
 

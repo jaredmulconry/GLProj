@@ -54,8 +54,6 @@ namespace GlProj
 				return hierarchy;
 			}
 
-			void Draw(const Camera&) const;
-			void Draw(const Camera&, Material&) const;
 		};
 	}
 }

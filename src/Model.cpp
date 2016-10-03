@@ -16,14 +16,5 @@ namespace GlProj
 		{
 
 		}
-		void Model::Draw(const Camera& cam) const
-		{
-
-			//glDrawElements(GL_TRIANGLES, submeshes[0].mesh->FaceCount(), GL_UNSIGNED_INT, nullptr);
-		}
-		void Model::Draw(const Camera& cam, Material& mat) const
-		{
-
-		}
 	}
 }

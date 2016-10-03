@@ -391,6 +391,7 @@ namespace GlProj
 				if (p == nullptr)
 				{
 					find_all_cached(x, c, out);
+					return;
 				}
 
 				if (p->children->empty())

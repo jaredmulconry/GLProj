@@ -12,10 +12,10 @@ namespace GlProj
 		struct Camera;
 		class Mesh;
 		class Material;
-		struct RenderableHandle;
+		class RenderableHandle;
 		class RenderManager;
-		struct RenderBatch;
-		using Utilities::Transform;
+		class RenderBatch;
+		using GlProj::Utilities::Transform;
 
 		template<typename T>
 		using local_shared_ptr = Utilities::LocalSharedPtr<T>;

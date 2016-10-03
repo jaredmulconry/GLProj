@@ -3,21 +3,35 @@
 #include "Material.hpp"
 #include "Transform.hpp"
 
+#include "glm\mat4x4.hpp"
+
+#include <vector>
+
+using GlProj::Utilities::LocalWeakPtr;
+
 namespace GlProj
 {
 	namespace Graphics
 	{
 		class RenderManager
 		{
-
+			std::vector<LocalWeakPtr<RenderBatch>> batches;
 		};
-		struct RenderBatch
+		class RenderBatch
 		{
-
+			std::vector<LocalWeakPtr<RenderableHandle>> handles;
+			glm::mat4 projectionTransform;
+			glm::mat4 viewTransform;
+			BatchType type;
+			int priority;
+			bool groupedByMaterial;
+			bool groupedByMesh;
 		};
-		struct RenderableHandle
+		class RenderableHandle
 		{
-
+			glm::mat4 transform;
+			Mesh* mesh;
+			Material* material;
 		};
 
 

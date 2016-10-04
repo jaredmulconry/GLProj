@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-using GlProj::Utilities::LocalWeakPtr;
+using namespace GlProj::Utilities;
 
 namespace GlProj
 {
@@ -26,9 +26,23 @@ namespace GlProj
 		};
 		class RenderBatch
 		{
+			static bool LessWeaks(const LocalWeakPtr<RenderableHandle>& x,
+								  const LocalWeakPtr<RenderableHandle>& y) noexcept
+			{
+				return x.owner_before(y);
+			}
+
+			//State needs to be appropriately compact in memory.
+			//However, only some of the state has invariants
+			//worth protecting.
+
 			std::vector<LocalWeakPtr<RenderableHandle>> handles;
-			glm::mat4 projectionTransform;
-			glm::mat4 viewTransform;
+		public:
+			glm::mat4 projectionTransform = glm::mat4(1);
+			glm::mat4 viewTransform = glm::mat4(1);
+		private:
+			Material* overrideMaterial = nullptr;
+		public:
 			BatchType type;
 			int priority;
 			bool groupedByMaterial;
@@ -44,11 +58,7 @@ namespace GlProj
 
 			LocalSharedPtr<RenderableHandle> AddHandle(LocalWeakPtr<RenderableHandle> h)
 			{
-				auto insertPos = std::lower_bound(handles.begin(), handles.end(), h, 
-					[](const auto& x, const auto& y)
-				{
-					return x.owner_before(y);
-				});
+				auto insertPos = std::lower_bound(handles.begin(), handles.end(), h, LessWeaks);
 				if (Utilities::CompareWeaks(*insertPos, h))
 				{
 					return h.lock();
@@ -58,13 +68,24 @@ namespace GlProj
 
 				return sp;
 			}
+			bool RemoveHandle(const LocalWeakPtr<RenderableHandle>& h)
+			{
+				auto handlePos = std::lower_bound(handles.begin(), handles.end(), h, LessWeaks);
+				if (CompareWeaks(*handlePos, h))
+				{
+					handles.erase(handlePos);
+					return true;
+				}
+				return false;
+			}
 		};
 		class RenderableHandle
 		{
-			glm::mat4 transform;
+		public:
+			glm::mat4 transform = glm::mat4(1);
 			Mesh* mesh;
 			Material* material;
-		public:
+		
 
 		};
 

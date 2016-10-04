@@ -31,7 +31,7 @@ namespace GlProj
 		};
 
 		RenderManager* GetRenderManager();
-		local_shared_ptr<RenderBatch> GenerateRenderBatch(RenderManager*, BatchType,
+		local_shared_ptr<RenderBatch> GenerateRenderBatch(RenderManager*, BatchType = BatchType::Opaque,
 										 int priority = 0,
 										 bool groupMaterials = true,
 										 bool groupMeshes = true);

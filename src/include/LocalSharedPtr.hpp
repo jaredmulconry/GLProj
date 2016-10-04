@@ -283,7 +283,7 @@ namespace GlProj
 			}
 
 			template<typename U>
-			bool owner_before(const LocalSharedPtr<U>& x)
+			bool owner_before(const LocalSharedPtr<U>& x) const
 			{
 				return ref < x.ref;
 			}
@@ -480,7 +480,7 @@ namespace GlProj
 			}
 
 			template<typename U>
-			bool owner_before(const LocalSharedPtr<U>& x)
+			bool owner_before(const LocalSharedPtr<U>& x) const
 			{
 				return objRef < x.InternalGetPtr();
 			}
@@ -701,11 +701,22 @@ namespace GlProj
 				return expired() ? LocalSharedPtr<T>() : LocalSharedPtr<T>(*this);
 			}
 			template<typename U>
-			bool owner_before(const LocalSharedPtr<U>& x)
+			bool owner_before(const LocalSharedPtr<U>& x)const
+			{
+				return ref < x.InternalGetRef();
+			}
+			template<typename U>
+			bool owner_before(const LocalWeakPtr<U>& x) const
 			{
 				return ref < x.InternalGetRef();
 			}
 		};
+
+		template<typename T, typename U>
+		bool CompareWeaks(const LocalWeakPtr<T>& x, const LocalWeakPtr<U>& y)
+		{
+			return x.InternalGetRef() == y.InternalGetRef() && x.lock() == y.lock();
+		}
 
 		template<typename U1, typename U2>
 		bool operator==(const LocalSharedPtr<U1>& x,

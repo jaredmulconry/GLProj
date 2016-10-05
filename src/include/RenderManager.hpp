@@ -1,5 +1,6 @@
 #pragma once
-#include <LocalSharedPtr.hpp>
+#include "glm\fwd.hpp"
+#include "LocalSharedPtr.hpp"
 
 namespace GlProj
 {
@@ -19,14 +20,15 @@ namespace GlProj
 
 		template<typename T>
 		using local_shared_ptr = Utilities::LocalSharedPtr<T>;
+		template<typename T>
+		using local_weak_ptr = Utilities::LocalWeakPtr<T>;
 
 		enum class BatchType : int
 		{
-			Opaque,
-			Translucent,
-			Cutout,
-			Overlay,
 			PreProcess,
+			Opaque,
+			Transparent,
+			Overlay,
 			PostProcess,
 		};
 
@@ -35,15 +37,17 @@ namespace GlProj
 										 int priority = 0,
 										 bool groupMaterials = true,
 										 bool groupMeshes = true);
-		Material* SetOverrideMaterial(RenderManager*, RenderBatch*,  Material*);
+		Material* SetOverrideMaterial(RenderBatch*,  Material*);
 
-		void UpdateBatchCamera(RenderManager*, RenderBatch*, const Camera&);
+		void UpdateBatchCamera(RenderBatch*, const Camera&);
 		
-		local_shared_ptr<RenderableHandle> SubmitRenderable(RenderManager*, RenderBatch*, Mesh&, Material* = nullptr);
-		Material* SetMaterial(RenderManager*, RenderBatch*, RenderableHandle*, Material*);
-		Transform SetTransform(RenderManager*, RenderBatch*, RenderableHandle*, const Transform&);
-		bool RemoveRenderable(RenderManager*, RenderBatch*, RenderableHandle*);
+		local_shared_ptr<RenderableHandle> SubmitRenderable(RenderBatch*, Mesh&, Material* = nullptr);
+		bool RemoveRenderable(RenderBatch*, local_shared_ptr<RenderableHandle>&&);
+		Material* SetMaterial(RenderableHandle*, Material*);
+		glm::mat4 SetTransform(RenderableHandle*, const glm::mat4&);
 
+		void Draw(RenderManager*);
 		void DrawBatch(RenderManager*, RenderBatch*);
+		void DrawRenderable(RenderManager*, RenderBatch*, RenderableHandle*);
 	}
 }

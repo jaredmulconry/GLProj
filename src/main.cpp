@@ -6,6 +6,7 @@
 #include "Material.hpp"
 #include "MeshManager.hpp"
 #include "Model.hpp"
+#include "RenderManager.hpp"
 #include "SceneGraph.hpp"
 #include "Shader.hpp"
 #include "ShaderManager.hpp"
@@ -65,20 +66,25 @@ void PrepareAndRunGame(GLFWwindow* window)
 	for (int i = 0; i < int(bunny->mNumMeshes); ++i)
 	{
 		submeshes.push_back({ RegisterMesh(GetMeshManager(), bunny->mMeshes[i], bunny->mMeshes[i]->mName.C_Str()), 
-							  material });
+							  nullptr });
 	}
 
+	SceneGraph<ModelData> bunnyGraph;
+
+	//Model bunyModel{ submeshes }
 
 	GlProj::Utilities::TestSceneGraph();
 
 	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
+	auto renderer = GetRenderManager();
 
 	while (!glfwWindowShouldClose(window))
 	{
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glfwSwapBuffers(window);
+		Draw(renderer);
 
+		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
 }

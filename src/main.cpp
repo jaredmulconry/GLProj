@@ -23,6 +23,31 @@
 
 using namespace GlProj::Graphics;
 
+inline glm::mat4 aiToGlm(const aiMatrix4x4& o)
+{
+	return{o.a1, o.a2, o.a3, o.a4,
+		   o.b1, o.b2, o.b3, o.b4,
+		   o.c1, o.c2, o.c3, o.c4,
+		   o.d1, o.d2, o.d3, o.d4};
+}
+
+void PopulateGraph(SceneGraph<ModelData>& graph, 
+					GlProj::Utilities::SceneNode<ModelData>* parent, 
+					aiNode* node)
+{
+	parent = graph.emplace(parent, aiToGlm(node->mTransformation),
+							std::vector<unsigned int>(node->mMeshes, node->mMeshes + node->mNumMeshes),
+							node->mName.C_Str());
+
+	auto children = node->mChildren;
+	auto childCount = int(node->mNumChildren);
+
+	for(int i = 0; i < childCount; ++i)
+	{
+		PopulateGraph(graph, parent, children[i]);
+	}
+}
+
 void glfwExecErrorCallback(int, const char* msg)
 {
 	std::cerr << "glfw error: " << msg << std::endl;
@@ -70,8 +95,9 @@ void PrepareAndRunGame(GLFWwindow* window)
 	}
 
 	SceneGraph<ModelData> bunnyGraph;
+	PopulateGraph(bunnyGraph, nullptr, bunny->mRootNode);
 
-	//Model bunyModel{ submeshes }
+	Model bunnyModel{ submeshes, std::move(bunnyGraph) };
 
 	GlProj::Utilities::TestSceneGraph();
 

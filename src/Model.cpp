@@ -16,5 +16,12 @@ namespace GlProj
 		{
 
 		}
+		ModelData::ModelData(const glm::mat4& trans, 
+							std::vector<unsigned int>&& indices, 
+							std::string&& name)
+			: transform(trans)
+			, meshes(std::move(indices))
+			, name(name)
+		{}
 	}
 }

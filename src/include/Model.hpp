@@ -18,6 +18,9 @@ namespace GlProj
 
 		struct ModelData
 		{
+			ModelData() = default;
+			ModelData(const glm::mat4&, std::vector<unsigned int>&&, std::string&&);
+
 			glm::mat4 transform;
 			std::vector<unsigned int> meshes;
 			std::string name;

@@ -43,7 +43,7 @@ namespace GlProj
 		
 		local_shared_ptr<RenderableHandle> SubmitRenderable(RenderBatch*, Mesh&, Material* = nullptr);
 		bool RemoveRenderable(RenderBatch*, local_shared_ptr<RenderableHandle>&&);
-		Material* SetMaterial(RenderableHandle*, Material*);
+		Material* SetMaterial(RenderBatch*, RenderableHandle*, Material*);
 		glm::mat4 SetTransform(RenderableHandle*, const glm::mat4&);
 
 		void Draw(RenderManager*);

@@ -3,6 +3,8 @@
 #include "assimp/Importer.hpp"
 #include "assimp/postprocess.h"
 #include "assimp/scene.h"
+#include "Camera.hpp"
+#include "glm/gtx/transform.hpp"
 #include "Material.hpp"
 #include "MeshManager.hpp"
 #include "Model.hpp"
@@ -97,7 +99,7 @@ void PrepareAndRunGame(GLFWwindow* window)
 		std::string err;
 		err += importer.GetErrorString();
 		throw std::runtime_error(err);
-	}
+	} 
 	std::vector<Renderable> submeshes; 
 	submeshes.reserve(bunny->mNumMeshes);
 	auto material = GetDefaultMaterial();
@@ -137,6 +139,8 @@ void PrepareAndRunGame(GLFWwindow* window)
 		}
 	}
 	SetOverrideMaterial(batch.get(), material.get());
+	auto cam = Camera{ Camera::Orthographic{glm::vec2{16.0f, 9.0f}}, -10.0f, 10.0f};
+	UpdateBatchCamera(batch.get(), cam);
 
 	while (!glfwWindowShouldClose(window))
 	{

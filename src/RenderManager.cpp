@@ -1,6 +1,8 @@
 #include "RenderManager.hpp"
 #include "Camera.hpp"
 #include "Material.hpp"
+#include "Mesh.hpp"
+#include "ShadingProgram.hpp"
 #include "Transform.hpp"
 
 #include "glm\mat4x4.hpp"
@@ -181,7 +183,15 @@ namespace GlProj
 		{
 			batch->OptimiseBatch();
 
-			auto handlesEnd = batch->handles.end();
+			const bool usingOverride = batch->overrideMaterial != nullptr;
+			if (usingOverride)
+			{
+				batch->overrideMaterial->Bind();
+			}
+
+			auto viewProjection = batch->projectionTransform * batch->viewTransform;
+
+			const auto handlesEnd = batch->handles.end();
 
 			auto materialBegin = batch->handles.begin();
 			auto materialEnd = batch->GetNextSubrange(materialBegin,
@@ -189,8 +199,21 @@ namespace GlProj
 				RenderBatch::OrderHandlesByMaterial);
 			while (materialBegin != handlesEnd)
 			{
+				auto pinnedMaterial = materialBegin->lock();
+				auto& materialInUse = usingOverride ? *batch->overrideMaterial : *pinnedMaterial->material;
+				const auto& programInUse = materialInUse.GetProgram();
+				
 				//Bind shared material
+				if (usingOverride) 
+				{
 
+				}
+				else
+				{
+					materialInUse.Bind();
+
+					//Apply non-static bind information to Material
+				}
 				//
 				auto meshBegin = materialBegin;
 				auto meshEnd = batch->GetNextSubrange(meshBegin,
@@ -202,15 +225,23 @@ namespace GlProj
 					//Bind shared meshes
 					//Initialize instance buffer
 					//Render
+					auto pinnedMesh = meshBegin->lock();
+					auto& meshInUse = *pinnedMesh->mesh;
+					meshInUse.Bind();
 
+					while (meshBegin != meshEnd)
+					{
+						
+
+						++meshBegin;
+					}
 					//
 
-					meshBegin = meshEnd;
 					meshEnd = batch->GetNextSubrange(meshBegin,
 						materialEnd,
 						RenderBatch::OrderHandlesByMaterial);
 				}
-				
+
 				materialBegin = materialEnd;
 				materialEnd = batch->GetNextSubrange(materialBegin,
 					handlesEnd,

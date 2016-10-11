@@ -14,6 +14,8 @@ namespace GlProj
 			glm::vec3 scale;
 		};
 
+		Transform Identity() noexcept;
+
 		glm::mat4 ToMatrix(const Transform&) noexcept;
 		Transform FromMatrix(const glm::mat4&) noexcept;
 	}

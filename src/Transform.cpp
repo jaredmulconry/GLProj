@@ -1,6 +1,6 @@
 #include "Transform.hpp"
 #include "glm/matrix.hpp"
-#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/transform.hpp"
 #include "glm/gtx/matrix_decompose.hpp"
 #include "glm/vec3.hpp"
 #include "glm/vec4.hpp"
@@ -9,12 +9,16 @@ namespace GlProj
 {
 	namespace Utilities
 	{
+		Transform Identity() noexcept
+		{
+			return{ {0.f, 0.f, 0.f}, {}, {1.f, 1.f, 1.f } };
+		}
 		glm::mat4 ToMatrix(const Transform& t) noexcept
 		{
 			auto result = glm::mat4(1.0f);
-			result = glm::scale(result, t.scale);
+			result *= glm::scale(t.scale);
 			result *= glm::mat4_cast(t.rotation);
-			result = glm::translate(result, t.position);
+			result *= glm::translate(t.position);
 			return result;
 		}
 		Transform FromMatrix(const glm::mat4& m) noexcept

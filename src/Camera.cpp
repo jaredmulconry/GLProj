@@ -1,6 +1,6 @@
 #include "Camera.hpp"
 #include "glm/matrix.hpp"
-#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/transform.hpp"
 #include <exception>
 
 using namespace GlProj::Utilities;
@@ -9,6 +9,22 @@ namespace GlProj
 {
 	namespace Graphics
 	{
+		Camera::Camera(Orthographic data, float nearPlane, float farPlane)
+			:transform(Identity())
+			,data(data)
+			,type(CameraType::Orthographic)
+			,nearPlane(nearPlane)
+			,farPlane(farPlane)
+		{
+		}
+		Camera::Camera(Perspective data, float nearPlane, float farPlane)
+			: transform(Identity())
+			, data(data)
+			, type(CameraType::Perspective)
+			, nearPlane(nearPlane)
+			, farPlane(farPlane)
+		{
+		}
 		glm::mat4 Camera::View() const noexcept
 		{
 			return ToMatrix(transform);

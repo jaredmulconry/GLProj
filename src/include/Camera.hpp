@@ -26,6 +26,18 @@ namespace GlProj
 				float aspect;
 			};
 
+			union CameraData
+			{
+				Orthographic orthographic;
+				Perspective perspective;
+
+				explicit CameraData(Orthographic o)
+					:orthographic(o) {}
+				explicit CameraData(Perspective p)
+					:perspective(p) {}
+				~CameraData() = default;
+			};
+
 			struct CommonAspect
 			{
 				static const constexpr float aspect_21_9 = 21.0f / 9.0f;
@@ -37,6 +49,9 @@ namespace GlProj
 
 			using transform_type = Utilities::Transform;
 
+			Camera() = delete;
+			Camera(Orthographic data, float nearPlane, float farPlane);
+			Camera(Perspective data, float nearPlane, float farPlane);
 			~Camera() = default;
 
 			glm::mat4 View() const noexcept;
@@ -45,11 +60,7 @@ namespace GlProj
 
 			transform_type transform;
 		private:
-			union CameraData
-			{
-				Orthographic orthographic;
-				Perspective perspective;
-			} data;
+			CameraData data;
 			float nearPlane;
 			float farPlane;
 			CameraType type;

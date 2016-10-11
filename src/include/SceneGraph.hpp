@@ -12,6 +12,10 @@ namespace GlProj
 	{
 		template<typename T>
 		class SceneGraph;
+		template<typename T>
+		struct SceneGraphIterator;
+		template<typename T>
+		struct SceneGraphConstIterator;
 
 		///Requires T is Semi-regular
 		template<typename T>
@@ -43,19 +47,39 @@ namespace GlProj
 
 		///Depth-first iterator over a scene graph
 		template<typename T>
-		struct SceneGraphIterator : 
+		struct SceneGraphIterator :
 			public std::iterator<std::forward_iterator_tag,
-								 T>
+			T>
 		{
-			friend class SceneGraph<T>;
+			friend SceneGraph<T>;
+			friend SceneGraphConstIterator<T>;
 			using base_t = std::iterator<std::forward_iterator_tag,
-			      					T>;
+				T>;
 			using reference = typename base_t::reference;
 			using pointer = typename base_t::reference;
 
 			SceneNode<T>* current;
 			SceneGraph<T>* owner;
-			
+
+			SceneGraphIterator() noexcept = default;
+			SceneGraphIterator(SceneNode<T>* current, SceneGraph<T>* owner) noexcept
+				:current(current)
+				, owner(owner)
+			{}
+			explicit SceneGraphIterator(const SceneGraphIterator<T>& x)
+				:current(x.current)
+				, owner(x.owner)
+			{}
+
+			SceneGraphIterator& operator=(const SceneGraphIterator<T>& x)
+			{
+				current = x.current;
+				owner = x.owner;
+
+				return *this;
+			}
+
+
 			reference operator*()
 			{
 				return current->data;
@@ -74,28 +98,7 @@ namespace GlProj
 				return &current->data;
 			}
 
-			SceneGraphIterator& operator++()
-			{
-				if (!current->children->empty())
-				{
-					current = current->children->data();
-				}
-				else
-				{
-					auto* selfList = (current->parent == nullptr) ? &owner->rootNodes : current->parent->children;
-
-					++current;
-					while (current == (selfList->data() + selfList->size()))
-					{
-						if (current->parent == nullptr) return *this;
-
-						selfList = (current->parent->parent == nullptr) ? &owner->rootNodes : current->parent->parent->children;
-						current = current->parent + 1;
-					}
-				}
-
-				return *this;
-			}
+			SceneGraphIterator& operator++();
 			SceneGraphIterator operator++(int)
 			{
 				auto cpy = *this;
@@ -118,19 +121,23 @@ namespace GlProj
 			public std::iterator<std::forward_iterator_tag,
 			const T>
 		{
-			friend class SceneGraph<T>;
-			friend struct SceneGraphIterator<T>;
+			friend SceneGraph<T>;
+			friend SceneGraphIterator<T>;
 			using base_t = std::iterator<std::forward_iterator_tag,
-			      					T>;
+				T>;
 			using reference = typename base_t::reference;
-			using pointer = typename base_t::reference;
+			using pointer = typename base_t::pointer;
 			SceneNode<T>* current;
 			SceneGraph<T>* owner;
 
 			SceneGraphConstIterator() noexcept = default;
+			SceneGraphConstIterator(SceneNode<T>* current, SceneGraph<T>* owner) noexcept
+				:current(current)
+				, owner(owner)
+			{}
 			explicit SceneGraphConstIterator(const SceneGraphIterator<T>& x)
 				:current(x.current)
-				,owner(x.owner)
+				, owner(x.owner)
 			{}
 
 			SceneGraphConstIterator& operator=(const SceneGraphIterator<T>& x)
@@ -159,28 +166,7 @@ namespace GlProj
 				return &current->data;
 			}
 
-			SceneGraphConstIterator& operator++()
-			{
-				if (!current->children->empty())
-				{
-					current = current->children->data();
-				}
-				else
-				{
-					auto* selfList = (current->parent == nullptr) ? &owner->rootNodes : current->parent->children;
-
-					++current;
-					while (current == (selfList->data() + selfList->size()))
-					{
-						if (current->parent == nullptr) return *this;
-
-						selfList = (current->parent->parent == nullptr) ? &owner->rootNodes : current->parent->parent->children;
-						current = current->parent + 1;
-					}
-				}
-
-				return *this;
-			}
+			SceneGraphConstIterator& operator++();
 			SceneGraphConstIterator operator++(int)
 			{
 				auto cpy = *this;
@@ -204,6 +190,9 @@ namespace GlProj
 		class SceneGraph
 		{
 		public:
+			friend SceneGraphIterator<T>;
+			friend SceneGraphConstIterator<T>;
+
 			using node_type = SceneNode<T>;
 			using ChildList = std::vector<node_type>;
 			using ChildListIterator = typename ChildList::iterator;
@@ -218,16 +207,18 @@ namespace GlProj
 					delete n;
 				}
 			}
+			SceneGraph(SceneGraph&& x) noexcept;
+			SceneGraph& operator=(SceneGraph&& x) noexcept;
 
 			GraphIterator begin()
 			{
 				return{ rootNodes.data(),
-						this};
+						this };
 			}
 			GraphConstIterator begin() const
 			{
-				return{	const_cast<node_type*>(rootNodes.data()), 
-						const_cast<SceneGraph<T>*const>(this)};
+				return{ const_cast<node_type*>(rootNodes.data()),
+						const_cast<SceneGraph<T>*const>(this) };
 			}
 			GraphConstIterator cbegin() const
 			{
@@ -241,7 +232,7 @@ namespace GlProj
 			}
 			GraphConstIterator end() const
 			{
-				return{ const_cast<node_type*>(rootNodes.data() + rootNodes.size()), 
+				return{ const_cast<node_type*>(rootNodes.data() + rootNodes.size()),
 						const_cast<SceneGraph<T>*const>(this) };
 			}
 			GraphConstIterator cend() const
@@ -509,7 +500,7 @@ namespace GlProj
 					++srcUpdatePt;
 				}
 
-				auto destUpdatePt = needsUpdate ? dest.begin() : (dest.begin() + dest.size()-1);
+				auto destUpdatePt = needsUpdate ? dest.begin() : (dest.begin() + dest.size() - 1);
 				while (destUpdatePt != dest.end())
 				{
 					UpdateParent(&*destUpdatePt, destUpdatePt->children->begin(), destUpdatePt->children->end());
@@ -653,5 +644,88 @@ namespace GlProj
 		};
 
 		void TestSceneGraph();
+
+		template<typename T>
+		inline SceneGraphConstIterator<T> & SceneGraphConstIterator<T>::operator++()
+		{
+			if (!current->children->empty())
+			{
+				current = current->children->data();
+			}
+			else
+			{
+				auto* selfList = (current->parent == nullptr) ? &owner->rootNodes : current->parent->children;
+
+				auto prev = current++;
+				while (current == (selfList->data() + selfList->size()))
+				{
+					if (prev->parent == nullptr) return *this;
+
+					selfList = (prev->parent->parent == nullptr) ? &owner->rootNodes : prev->parent->parent->children;
+					auto newPrev = prev->parent;
+					current = newPrev + 1;
+					prev = newPrev;
+				}
+			}
+
+			return *this;
+		}
+		template<typename T>
+		inline SceneGraphIterator<T> & SceneGraphIterator<T>::operator++()
+		{
+			if (!current->children->empty())
+			{
+				current = current->children->data();
+			}
+			else
+			{
+				auto* selfList = (current->parent == nullptr) ? &owner->rootNodes : current->parent->children;
+
+				++current;
+				while (current == (selfList->data() + selfList->size()))
+				{
+					if (current->parent == nullptr) return *this;
+
+					selfList = (current->parent->parent == nullptr) ? &owner->rootNodes : current->parent->parent->children;
+					current = current->parent + 1;
+				}
+			}
+
+			return *this;
+		}
+		template<typename T>
+		inline SceneGraph<T>::SceneGraph(SceneGraph<T>&& x) noexcept
+			: rootNodes(std::move(x.rootNodes))
+			, allChildren(std::move(x.allChildren))
+		{
+			for (auto& node : rootNodes)
+			{
+				auto parent = &node;
+
+				UpdateParent(parent, node.children->begin(), node.children->end());
+			}
+		}
+		template<typename T>
+		inline SceneGraph<T>& SceneGraph<T>::operator=(SceneGraph<T>&& x) noexcept
+		{
+			if (this != &x)
+			{
+				for (auto& n : allChildren)
+				{
+					delete n;
+				}
+
+				rootNodes = std::move(x.rootNodes);
+				allChildren = std::move(x.allChildren);
+
+				for (auto& node : rootNodes)
+				{
+					auto parent = &node;
+
+					UpdateParent(parent, node.children->begin(); node.children->end());
+				}
+			}
+			return *this;
+		}
 	}
 }

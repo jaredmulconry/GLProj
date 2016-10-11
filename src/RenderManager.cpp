@@ -88,6 +88,7 @@ namespace GlProj
 			template<typename I, typename P>
 			I GetNextSubrange(I first, I last, P pred)
 			{
+				if (first == last) return last;
 				return std::upper_bound(first, last, *first, pred);
 			}
 		};
@@ -395,7 +396,7 @@ namespace GlProj
 			CleanStale();
 			if (dirty)
 			{
-				if (this->overrideMaterial == nullptr)
+				if (this->overrideMaterial != nullptr)
 				{
 					std::stable_sort(handles.begin(), handles.end(), OrderHandlesByMesh);
 				}

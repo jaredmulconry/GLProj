@@ -31,6 +31,20 @@ inline glm::mat4 aiToGlm(const aiMatrix4x4& o)
 		   o.d1, o.d2, o.d3, o.d4};
 }
 
+inline glm::mat4 ApplyHierarchy(const GlProj::Utilities::SceneNode<ModelData>& n)
+{
+	auto node = &n;
+
+	auto t = glm::mat4(1);
+	while (node != nullptr)
+	{
+		t *= node->data.transform;
+		node = node->parent;
+	}
+
+	return t;
+}
+
 void PopulateGraph(SceneGraph<ModelData>& graph, 
 					GlProj::Utilities::SceneNode<ModelData>* parent, 
 					aiNode* node)
@@ -103,10 +117,31 @@ void PrepareAndRunGame(GLFWwindow* window)
 
 	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
 	auto renderer = GetRenderManager();
+	auto batch = GenerateRenderBatch(renderer);
+
+	std::vector<local_shared_ptr<RenderableHandle>> handles;
+	for (int i = 0; i < int(submeshes.size()); ++i)
+	{
+		handles.push_back(SubmitRenderable(batch.get(), *(submeshes[i].mesh), submeshes[i].material.get()));
+	}
+	auto& hierarchy = bunnyModel.GetHierarchy();
+	for (auto pos = hierarchy.begin(); pos != hierarchy.end(); ++pos)
+	{
+		if (pos->meshes.empty()) continue;
+
+		auto transform = ApplyHierarchy(*pos.current);
+		auto& dat = *pos;
+		for (const auto& i : dat.meshes)
+		{
+			SetTransform(handles[i].get(), transform);
+		}
+	}
+	SetOverrideMaterial(batch.get(), material.get());
 
 	while (!glfwWindowShouldClose(window))
 	{
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+				GL_STENCIL_BUFFER_BIT);
 
 		Draw(renderer);
 

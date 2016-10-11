@@ -509,12 +509,12 @@ namespace GlProj
 			T* refObj;
 			friend class LocalSharedPtr<T>;
 
-			void IncrementWeak()
+			void IncrementWeak() noexcept
 			{
 				if (ref == nullptr) return;
 				++ref->weak_count;
 			}
-			void DecrementWeak()
+			void DecrementWeak() noexcept
 			{
 				if (ref == nullptr) return;
 				--ref->weak_count;
@@ -530,21 +530,21 @@ namespace GlProj
 				:ref(nullptr)
 				,refObj(nullptr)
 			{}
-			LocalWeakPtr(const LocalWeakPtr& r)
+			LocalWeakPtr(const LocalWeakPtr& r) noexcept
 				:ref(r.ref)
 				,refObj(r.refObj)
 			{
 				IncrementWeak();
 			}
 			template<typename Y, typename = std::enable_if_t<std::is_convertible<Y*, T*>::value>>
-			LocalWeakPtr(const LocalWeakPtr<Y>& r)
+			LocalWeakPtr(const LocalWeakPtr<Y>& r) noexcept
 				:ref(r.ref)
 				,refObj(r.refObj)
 			{
 				IncrementWeak();
 			}
 			template<typename Y, typename = std::enable_if_t<std::is_convertible<Y*, T*>::value>>
-			LocalWeakPtr(const LocalSharedPtr<Y>& r)
+			LocalWeakPtr(const LocalSharedPtr<Y>& r) noexcept
 				:ref(r.InternalGetRef())
 				,refObj(r.get())
 			{
@@ -558,7 +558,7 @@ namespace GlProj
 				r.refObj = nullptr;
 			}
 			template<typename Y, typename = std::enable_if_t<std::is_convertible<Y*, T*>::value>>
-			LocalWeakPtr(LocalWeakPtr<Y>&& r)
+			LocalWeakPtr(LocalWeakPtr<Y>&& r) noexcept
 				:ref(r.ref)
 				,refObj(r.refObj)
 			{
@@ -665,16 +665,16 @@ namespace GlProj
 				return *this;
 			}
 
-			T* InternalGetPtr() const
+			T* InternalGetPtr() const noexcept
 			{
 				return refObj;
 			}
-			detail::RefBase* InternalGetRef() const
+			detail::RefBase* InternalGetRef() const noexcept
 			{
 				return ref;
 			}
 
-			void reset()
+			void reset() noexcept
 			{
 				DecrementWeak();
 
@@ -688,25 +688,29 @@ namespace GlProj
 				swap(ref, r.ref);
 				swap(refObj, r.refObj);
 			}
-			long use_count() const
+			friend void swap(LocalWeakPtr& x, LocalWeakPtr& y) noexcept
+			{
+				x.swap(y);
+			}
+			long use_count() const noexcept
 			{
 				return ref == nullptr ? 0 : ref->ref_count;
 			}
-			bool expired() const
+			bool expired() const noexcept
 			{
 				return use_count() == 0;
 			}
-			LocalSharedPtr<T> lock() const
+			LocalSharedPtr<T> lock() const noexcept
 			{
 				return expired() ? LocalSharedPtr<T>() : LocalSharedPtr<T>(*this);
 			}
 			template<typename U>
-			bool owner_before(const LocalSharedPtr<U>& x)const
+			bool owner_before(const LocalSharedPtr<U>& x)const noexcept
 			{
 				return ref < x.InternalGetRef();
 			}
 			template<typename U>
-			bool owner_before(const LocalWeakPtr<U>& x) const
+			bool owner_before(const LocalWeakPtr<U>& x) const noexcept
 			{
 				return ref < x.InternalGetRef();
 			}

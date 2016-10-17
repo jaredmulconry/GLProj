@@ -1,9 +1,10 @@
 #include "ShadingProgram.hpp"
-#include "gl_core_4_1.h"
+#include "gl_core_4_5.h"
 #include "GLFW/glfw3.h"
 #include "Mesh.hpp"
 #include "Shader.hpp"
 #include <algorithm>
+#include <iterator>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -12,6 +13,20 @@ namespace GlProj
 {
 	namespace Graphics
 	{
+		struct UniformNameLess
+		{
+			template<typename T, typename U>
+			inline bool operator()(const T& x, const U& y)
+			{
+				return x.first < y.first;
+			}
+			template<typename T>
+			inline bool operator()(const T& x, const std::string& y)
+			{
+				return x.first < y;
+			}
+		};
+
 		bool operator==(const ShadingProgram& x, const ShadingProgram& y) noexcept
 		{
 			return x.programHandle == y.programHandle;
@@ -77,14 +92,17 @@ namespace GlProj
 		}
 		ShadingProgram::UniformInfoConstIterator ShadingProgram::FindUniform(const std::string& name) const
 		{
-			return std::find_if(uniforms.cbegin(), uniforms.cend(), [&name](const auto& x)
+			auto pos = std::lower_bound(uniformNameRef.cbegin(), uniformNameRef.cend(), name, UniformNameLess{});
+			if (pos != uniformNameRef.cend() && pos->first == name)
 			{
-				return name == x.name;
-			});
+				auto dist = pos->second - uniforms.data();
+				return uniforms.cbegin() + dist;
+			}
+			return uniforms.cend();
 		}
 		ShadingProgram::UniformInfoConstIterator ShadingProgram::FindUniform(GLint loc) const
 		{
-			return std::find_if(uniforms.cbegin(), uniforms.cend(), [&loc](const auto& x)
+			return std::find_if(uniforms.cbegin(), uniforms.cend(), [loc](const auto& x)
 			{
 				return loc == x.location;
 			});
@@ -107,6 +125,7 @@ namespace GlProj
 		{
 			attributes.clear();
 			uniforms.clear();
+			uniformNameRef.clear();
 
 			//TODO: Query for vertex attribute and uniform information
 			GLint attributeCount;
@@ -147,6 +166,13 @@ namespace GlProj
 
 				uniforms.push_back(UniformInformation{nameBuf.get(), GLenum(type), loc, size});
 			}
+
+			std::transform(uniforms.begin(), uniforms.end(), std::back_inserter(uniformNameRef), 
+				[](auto& x) -> UniformNameBufStorage::value_type
+			{
+				return{ x.name, &x };
+			});
+			std::sort(uniformNameRef.begin(), uniformNameRef.end(), UniformNameLess{});
 		}
 	}
 }

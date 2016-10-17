@@ -2,6 +2,7 @@
 #include "OpenGLTypes.hpp"
 #include <string>
 #include <vector>
+#include <utility>
 
 namespace GlProj
 {
@@ -31,10 +32,12 @@ namespace GlProj
 		{
 			using VertexAttribStorage = std::vector<VertexAttribute>;
 			using UniformInfoStorage = std::vector<UniformInformation>;
+			using UniformNameBufStorage = std::vector<std::pair<std::string, UniformInformation*>>;
 
 			GLuint programHandle = invalidHandle;
 			VertexAttribStorage attributes;
 			UniformInfoStorage uniforms;
+			UniformNameBufStorage uniformNameRef;
 
 		public:
 			using VertexAttribConstIterator = VertexAttribStorage::const_iterator;

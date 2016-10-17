@@ -1,0 +1,13 @@
+Reserved Attributes:
+position
+normal
+tangent
+bitangent
+uv[0-3]
+color[0-1]+
+
+Reserved Uniforms:
+i?[mvp]{1,3}+_transform
+diffuse[0-1]_map
+normal[0-1]_map
+specular[0-1]_map

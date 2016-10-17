@@ -8,6 +8,7 @@
 #include "glm\mat4x4.hpp"
 
 #include <algorithm>
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -107,6 +108,23 @@ namespace GlProj
 			RenderableHandle(Mesh* me, Material* ma) : mesh(me), material(ma) {}
 		};
 
+		static const std::string m_transform_id = "m_transform";
+		static const std::string v_transform_id = "v_transform";
+		static const std::string p_transform_id = "p_transform";
+		static const std::string mv_transform_id = "mv_transform";
+		static const std::string vp_transform_id = "vp_transform";
+		static const std::string mvp_transform_id = "mvp_transform";
+
+		static const std::string i_m_transform_id = "im_transform";
+		static const std::string i_v_transform_id = "iv_transform";
+		static const std::string i_p_transform_id = "ip_transform";
+		static const std::string i_mv_transform_id = "imv_transform";
+		static const std::string i_vp_transform_id = "ivp_transform";
+		static const std::string i_mvp_transform_id = "imvp_transform";
+		
+		void UpdateTransforms(Material* m, glm::mat4 model, glm::mat4 view, glm::mat4 projection,
+			bool updateModel = true, bool updateView = true, bool updateProject = true);
+
 		RenderManager* GetRenderManager()
 		{
 			static RenderManager manager;
@@ -170,6 +188,8 @@ namespace GlProj
 			return prev;
 		}
 
+
+
 		void Draw(RenderManager* mngr)
 		{
 			mngr->OptimiseBatchOrder();
@@ -187,9 +207,8 @@ namespace GlProj
 			if (usingOverride)
 			{
 				batch->overrideMaterial->Bind();
+				UpdateTransforms(batch->overrideMaterial, glm::mat4(1), batch->viewTransform, batch->projectionTransform, false, true, true);
 			}
-
-			auto viewProjection = batch->projectionTransform * batch->viewTransform;
 
 			const auto handlesEnd = batch->handles.end();
 
@@ -202,17 +221,17 @@ namespace GlProj
 				auto pinnedMaterial = materialBegin->lock();
 				auto& materialInUse = usingOverride ? *batch->overrideMaterial : *pinnedMaterial->material;
 				const auto& programInUse = materialInUse.GetProgram();
-				
+
 				//Bind shared material
-				if (usingOverride) 
+				if (usingOverride)
 				{
 
 				}
 				else
 				{
 					materialInUse.Bind();
-
 					//Apply non-static bind information to Material
+					UpdateTransforms(&materialInUse, glm::mat4(1), batch->viewTransform, batch->projectionTransform, false, true, true);
 				}
 				//
 				auto meshBegin = materialBegin;
@@ -228,10 +247,13 @@ namespace GlProj
 					auto pinnedMesh = meshBegin->lock();
 					auto& meshInUse = *pinnedMesh->mesh;
 					meshInUse.Bind();
+					
 
 					while (meshBegin != meshEnd)
 					{
-						
+						UpdateTransforms(&materialInUse, meshBegin->lock()->transform, batch->viewTransform, batch->projectionTransform, true, false, false);
+
+						glDrawElements(GL_TRIANGLES, meshInUse.PrimitiveCount(), GL_UNSIGNED_INT, nullptr);
 
 						++meshBegin;
 					}
@@ -253,6 +275,105 @@ namespace GlProj
 			RenderBatch* batch,
 			RenderableHandle* h)
 		{
+		}
+
+		inline void UpdateTransforms(Material* m, glm::mat4 model, glm::mat4 view, glm::mat4 projection,
+									bool updateModel, bool updateView, bool updateProject)
+		{
+			auto prog = m->GetProgram();
+
+			const auto uniformEnd = prog->UniformsEnd();
+
+			if (updateModel)
+			{
+				auto m_transform_h = prog->FindUniform(m_transform_id);
+				auto i_m_transform_h = prog->FindUniform(i_m_transform_id);
+
+				if (m_transform_h != uniformEnd)
+				{
+					m->SetUniform(*m_transform_h, model);
+				}
+				if (i_m_transform_h != uniformEnd)
+				{
+					m->SetUniform(*i_m_transform_h, glm::inverse(model));
+				}
+			}
+			if (updateView)
+			{
+				auto v_transform_h = prog->FindUniform(v_transform_id);
+				auto i_v_transform_h = prog->FindUniform(i_v_transform_id);
+
+				if (v_transform_h != uniformEnd)
+				{
+					m->SetUniform(*v_transform_h, view);
+				}
+				if (i_v_transform_h != uniformEnd)
+				{
+					m->SetUniform(*i_v_transform_h, glm::inverse(view));
+				}
+			}
+			if (updateModel || updateView)
+			{
+				auto mv_transform_h = prog->FindUniform(mv_transform_id);
+				auto i_mv_transform_h = prog->FindUniform(i_mv_transform_id);
+
+				auto mvTran = view * model;
+
+				if (mv_transform_h != uniformEnd)
+				{
+					m->SetUniform(*mv_transform_h, mvTran);
+				}
+				if (i_mv_transform_h != uniformEnd)
+				{
+					m->SetUniform(*i_mv_transform_h, glm::inverse(mvTran));
+				}
+			}
+			if (updateProject)
+			{
+				auto p_transform_h = prog->FindUniform(p_transform_id);
+				auto i_p_transform_h = prog->FindUniform(i_p_transform_id);
+
+				if (p_transform_h != uniformEnd)
+				{
+					m->SetUniform(*p_transform_h, projection);
+				}
+				if (i_p_transform_h != uniformEnd)
+				{
+					m->SetUniform(*i_p_transform_h, glm::inverse(projection));
+				}
+			}
+			if (updateView || updateProject)
+			{
+				auto vp_transform_h = prog->FindUniform(vp_transform_id);
+				auto i_vp_transform_h = prog->FindUniform(i_vp_transform_id);
+
+				auto vpTran = projection * view;
+
+				if (vp_transform_h != uniformEnd)
+				{
+					m->SetUniform(*vp_transform_h, vpTran);
+				}
+				if (i_vp_transform_h != uniformEnd)
+				{
+					m->SetUniform(*i_vp_transform_h, glm::inverse(vpTran));
+				}
+			}
+			if (updateModel || updateView || updateProject)
+			{
+				auto mvp_transform_h = prog->FindUniform(mvp_transform_id);
+				auto i_mvp_transform_h = prog->FindUniform(i_mvp_transform_id);
+
+				auto mvp = projection * view * model;
+
+				if (mvp_transform_h != uniformEnd)
+				{
+					m->SetUniform(*mvp_transform_h, mvp);
+				}
+				if (i_mvp_transform_h != uniformEnd)
+				{
+					m->SetUniform(*i_mvp_transform_h, glm::inverse(mvp));
+				}
+			}
 		}
 
 		inline bool RenderManager::OrderBatchByType(

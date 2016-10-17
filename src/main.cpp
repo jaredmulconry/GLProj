@@ -1,4 +1,4 @@
-#include "gl_core_4_1.h"
+#include "gl_core_4_5.h"
 #include "GLFW/glfw3.h"
 #include "assimp/Importer.hpp"
 #include "assimp/postprocess.h"
@@ -21,9 +21,96 @@
 #include <exception>
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 using namespace GlProj::Graphics;
+
+inline void APIENTRY GLDbgCallback(GLenum source, GLenum type, GLuint id,
+	GLenum severity, GLsizei length, const GLchar* message,
+	const void*)
+{
+	thread_local static std::string output;
+	output.clear();
+	output += "GL error:\nSource: ";
+
+	switch (source)
+	{
+	default:
+		output += "GL_DEBUG_SOURCE_OTHER";
+		break;
+	case GL_DEBUG_SOURCE_API:
+		output += "GL_DEBUG_SOURCE_API";
+		break;
+	case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+		output += "GL_DEBUG_SOURCE_WINDOW_SYSTEM";
+		break;
+	case GL_DEBUG_SOURCE_SHADER_COMPILER:
+		output += "GL_DEBUG_SOURCE_SHADER_COMPILER";
+		break;
+	case GL_DEBUG_SOURCE_THIRD_PARTY:
+		output += "GL_DEBUG_SOURCE_THIRD_PARTY";
+		break;
+	case GL_DEBUG_SOURCE_APPLICATION:
+		output += "GL_DEBUG_SOURCE_APPLICATION";
+		break;
+	}
+	output += "\nType: ";
+
+	switch (type)
+	{
+	default:
+		output += "GL_DEBUG_TYPE_OTHER";
+		break;
+	case GL_DEBUG_TYPE_ERROR:
+		output += "GL_DEBUG_TYPE_ERROR";
+		break;
+	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+		output += "GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR";
+		break;
+	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+		output += "GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR";
+		break;
+	case GL_DEBUG_TYPE_PORTABILITY:
+		output += "GL_DEBUG_TYPE_PORTABILITY";
+		break;
+	case GL_DEBUG_TYPE_PERFORMANCE:
+		output += "GL_DEBUG_TYPE_PERFORMANCE";
+		break;
+	case GL_DEBUG_TYPE_MARKER:
+		output += "GL_DEBUG_TYPE_MARKER";
+		break;
+	case GL_DEBUG_TYPE_PUSH_GROUP:
+		output += "GL_DEBUG_TYPE_PUSH_GROUP";
+		break;
+	case GL_DEBUG_TYPE_POP_GROUP:
+		output += "GL_DEBUG_TYPE_POP_GROUP";
+		break;
+	}
+	output += "\nID: ";
+	output += std::to_string(id);
+	output += "\nSeverity: ";
+
+	switch (severity)
+	{
+	default:
+		output += "GL_DEBUG_SEVERITY_NOTIFICATION";
+		break;
+	case GL_DEBUG_SEVERITY_HIGH:
+		output += "GL_DEBUG_SEVERITY_HIGH";
+		break;
+	case GL_DEBUG_SEVERITY_MEDIUM:
+		output += "GL_DEBUG_SEVERITY_MEDIUM";
+		break;
+	case GL_DEBUG_SEVERITY_LOW:
+		output += "GL_DEBUG_SEVERITY_LOW";
+		break;
+	}
+	output += "\nMessage:\n";
+	output += message;
+
+	std::cout << output << "\n\n";
+}
 
 inline glm::mat4 aiToGlm(const aiMatrix4x4& o)
 {
@@ -93,13 +180,17 @@ LocalSharedPtr<Material> GetDefaultMaterial()
 void PrepareAndRunGame(GLFWwindow* window)
 {
 	Assimp::Importer importer{};
-	auto bunny = importer.ReadFile("./data/models/bunny.obj", aiProcessPreset_TargetRealtime_Quality);
+	auto bunny = importer.ReadFile("./data/models/bunny.obj", aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_SortByPType | aiProcess_GenUVCoords | aiProcess_OptimizeGraph | aiProcess_OptimizeMeshes | aiProcess_GenSmoothNormals); 
 	if (bunny == nullptr)
 	{
 		std::string err;
 		err += importer.GetErrorString();
 		throw std::runtime_error(err);
-	} 
+	}
+
+	auto& initText = "System Init";
+
+	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, sizeof(initText), initText);
 	std::vector<Renderable> submeshes; 
 	submeshes.reserve(bunny->mNumMeshes);
 	auto material = GetDefaultMaterial();
@@ -139,24 +230,59 @@ void PrepareAndRunGame(GLFWwindow* window)
 		}
 	}
 	SetOverrideMaterial(batch.get(), material.get());
-	auto cam = Camera{ Camera::Orthographic{glm::vec2{16.0f, 9.0f}}, -10.0f, 10.0f};
+	auto cam = Camera{ Camera::Orthographic{glm::vec2{8.0f, 4.5f}}, -5.0f, 5.0f};
+	cam.transform = Transform{ {0.0f, -1.0f, 0.0f}, glm::quat(), {1.0f, 1.0f, 1.0f} };
 	UpdateBatchCamera(batch.get(), cam);
+
+	glPopDebugGroup();
+
+	auto& renderingGroup = "Render loop";
+
+	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, sizeof(renderingGroup), renderingGroup);
+
+	float angle = 0.0f;
+	const float rotationSpeed = 0.2f;
+	auto prevTime = glfwGetTime();
 
 	while (!glfwWindowShouldClose(window))
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
 				GL_STENCIL_BUFFER_BIT);
 
+		auto newTime = glfwGetTime();
+		auto delta = newTime - prevTime;
+		prevTime = newTime;
+		angle += float(delta) * rotationSpeed;
+
+		hierarchy.begin()->transform = glm::rotate(angle, glm::vec3{0.0f, 1.0f, 0.0f});
+
+		for (auto pos = hierarchy.begin(); pos != hierarchy.end(); ++pos)
+		{
+			if (pos->meshes.empty()) continue;
+
+			auto transform = ApplyHierarchy(*pos.current);
+			auto& dat = *pos;
+			for (const auto& i : dat.meshes)
+			{
+				SetTransform(handles[i].get(), transform);
+			}
+		}
+
+
 		Draw(renderer);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
+
+	glPopDebugGroup();
 }
 
 int main()
 try
 {
+	std::ios_base::sync_with_stdio(false);
+
 	glfwSetErrorCallback(glfwExecErrorCallback);
 	if (glfwInit() == GLFW_FALSE)
 	{
@@ -188,6 +314,13 @@ try
 	{
 		return EXIT_FAILURE;
 	}
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEBUG_OUTPUT);
+
+	glDebugMessageCallback(GLDbgCallback, nullptr);
+
+	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
 
 	PrepareAndRunGame(win);
 

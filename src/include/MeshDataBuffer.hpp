@@ -1,5 +1,5 @@
 #pragma once
-#include "gl_core_4_1.h"
+#include "gl_core_4_5.h"
 
 namespace GlProj
 {

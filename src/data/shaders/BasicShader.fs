@@ -1,10 +1,11 @@
 #version 430
 
 in vec4 f_position;
+in vec4 f_normal;
 
-out vec4 f_colour;
+out vec4 f_out;
 
 void main()
 {
-	f_colour = vec4(f_position.xyz, 1.0);
+	f_out = vec4(f_normal.xyz, 1.0);
 }

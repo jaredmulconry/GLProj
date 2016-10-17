@@ -39,7 +39,8 @@ namespace GlProj
 			std::vector<MeshDataBuffer> vertexData;
 			MeshIndexBuffer indices;
 			MeshArrayBuffer arrayBuffer;
-			unsigned int faceCount;
+			unsigned int primitiveCount;
+			unsigned int vertsPerPrimitive;
 
 			static const constexpr int ReservedVertexSlots = 20;
 
@@ -55,9 +56,13 @@ namespace GlProj
 
 			const MeshDataBuffer& GetMeshData(MeshSlots) const;
 			void Bind() const noexcept;
-			unsigned int FaceCount()const
+			unsigned int PrimitiveCount()const noexcept
 			{
-				return faceCount;
+				return primitiveCount;
+			}
+			unsigned int VertsPerPrimitive() const noexcept
+			{
+				return vertsPerPrimitive;
 			}
 
 			friend bool operator==(const Mesh&, const Mesh&) noexcept;

@@ -14,7 +14,23 @@ namespace GlProj
 			{
 				throw std::runtime_error("Provided mesh has no positions or faces.");
 			}
-			faceCount = mesh->mNumFaces;
+			if ((mesh->mPrimitiveTypes & aiPrimitiveType_POLYGON) != 0)
+			{
+				throw std::runtime_error("Provided mesh has unsupported primitive type.");
+			}
+
+			vertsPerPrimitive = 3;
+			if ((mesh->mPrimitiveTypes & aiPrimitiveType_POINT) != 0)
+			{
+				vertsPerPrimitive = 1;
+			}
+			else if ((mesh->mPrimitiveTypes & aiPrimitiveType_LINE) != 0)
+			{
+				vertsPerPrimitive = 2;
+			}
+
+			auto faceCount = mesh->mNumFaces;
+			primitiveCount = mesh->mNumFaces * vertsPerPrimitive;
 
 			arrayBuffer.Bind();
 			indices = MeshIndexBuffer(faceCount, mesh->mFaces);
@@ -85,6 +101,8 @@ namespace GlProj
 					SetAttributePointer(MeshSlots(MeshSlotToGL(MeshSlots::Colour0) + i));
 				}
 			}
+
+			MeshArrayBuffer::UnBind();
 		}
 
 		const MeshDataBuffer& Mesh::GetMeshData(MeshSlots s) const
@@ -99,7 +117,7 @@ namespace GlProj
 		void Mesh::SetAttributePointer(MeshSlots slot)
 		{
 			auto& meshData = GetMeshData(slot);
-			if (meshData.GetHandle() == meshData.invalidHandle)
+			if (meshData.GetHandle() == meshData.invalidHandle) 
 			{
 				return;
 			}

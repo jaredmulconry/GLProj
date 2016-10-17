@@ -510,6 +510,8 @@ namespace GlProj
 				n->parent = newParent;
 				return n;
 			}
+
+			bool verify_integrity() const;
 		private:
 			using size_type = typename ChildList::size_type;
 			ChildList rootNodes;
@@ -726,6 +728,21 @@ namespace GlProj
 				}
 			}
 			return *this;
+		}
+		template<typename T>
+		inline bool SceneGraph<T>::verify_integrity() const
+		{
+			for (auto& p : allChildren)//vector<SceneNode>*
+			{
+				for (auto& c : *p)//SceneNode
+				{
+					for (auto& cc : *c.children)//SceneNode
+					{
+						assert(cc.parent == &c);
+					}
+				}
+			}
+			return true;
 		}
 	}
 }

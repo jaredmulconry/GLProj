@@ -7,8 +7,7 @@ namespace GlProj
 	{
 		MeshArrayBuffer::MeshArrayBuffer() noexcept
 		{
-			glGenBuffers(1, &arrayBufferHandle);
-			glBindBuffer(GetType(), GetHandle());
+			glGenVertexArrays(1, &arrayBufferHandle);
 		}
 		MeshArrayBuffer::MeshArrayBuffer(MeshArrayBuffer&& x) noexcept
 			:arrayBufferHandle(x.arrayBufferHandle)
@@ -21,7 +20,7 @@ namespace GlProj
 			{
 				if (arrayBufferHandle != invalidHandle)
 				{
-					glDeleteBuffers(1, &arrayBufferHandle);
+					glDeleteVertexArrays(1, &arrayBufferHandle);
 				}
 				arrayBufferHandle = x.arrayBufferHandle;
 
@@ -34,7 +33,7 @@ namespace GlProj
 		{
 			if (arrayBufferHandle != invalidHandle)
 			{
-				glDeleteBuffers(1, &arrayBufferHandle);
+				glDeleteVertexArrays(1, &arrayBufferHandle);
 			}
 		}
 		GLuint MeshArrayBuffer::GetHandle() const noexcept
@@ -43,11 +42,15 @@ namespace GlProj
 		}
 		GLenum MeshArrayBuffer::GetType() const noexcept
 		{
-			return GL_ARRAY_BUFFER;
+			return GL_VERTEX_ARRAY;
 		}
 		void MeshArrayBuffer::Bind() const noexcept
 		{
-			glBindBuffer(GetType(), GetHandle());
+			glBindVertexArray(GetHandle());
+		}
+		void MeshArrayBuffer::UnBind() noexcept
+		{
+			glBindVertexArray(0);
 		}
 		bool operator==(const MeshArrayBuffer& x, const MeshArrayBuffer& y) noexcept
 		{

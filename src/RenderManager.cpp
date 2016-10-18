@@ -237,7 +237,7 @@ namespace GlProj
 				auto meshBegin = materialBegin;
 				auto meshEnd = batch->GetNextSubrange(meshBegin,
 					materialEnd,
-					RenderBatch::OrderHandlesByMaterial);
+					RenderBatch::OrderHandlesByMesh);
 
 				while (meshBegin != materialEnd)
 				{
@@ -261,7 +261,7 @@ namespace GlProj
 
 					meshEnd = batch->GetNextSubrange(meshBegin,
 						materialEnd,
-						RenderBatch::OrderHandlesByMaterial);
+						RenderBatch::OrderHandlesByMesh);
 				}
 
 				materialBegin = materialEnd;

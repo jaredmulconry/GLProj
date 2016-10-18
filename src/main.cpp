@@ -1,5 +1,6 @@
 #include "gl_core_4_5.h"
 #include "GLFW/glfw3.h"
+#include "assimp\DefaultLogger.hpp"
 #include "assimp/Importer.hpp"
 #include "assimp/postprocess.h"
 #include "assimp/scene.h"
@@ -16,10 +17,12 @@
 #include "Texture.hpp"
 #include "TextureManager.hpp"
 #include "Mesh.hpp"
+#include <algorithm>
 #include <chrono>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
+#include <iterator>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -120,6 +123,41 @@ inline glm::mat4 aiToGlm(const aiMatrix4x4& o)
 		   o.d1, o.d2, o.d3, o.d4};
 }
 
+template<typename I>
+//requires value_type of iterator is std::string
+inline void MakeNamesUnique(I first, I last)
+{
+	auto firstMesh = first;
+	while (firstMesh != last)
+	{
+		auto pairStart = std::adjacent_find(firstMesh, last);
+		if (pairStart == last)
+		{
+			break;
+		}
+		int i = 0;
+
+		std::string prev = *pairStart;
+		auto first = pairStart;
+		//First duplicate will have a 0-suffix
+		*first += std::to_string(i);
+		++i;
+		++pairStart;
+		//Second duplicate will have a 1-suffix
+		*pairStart += std::to_string(i);
+		++pairStart;
+		++i;
+		//Subsequent duplicates will have
+		while (pairStart != last && *pairStart == prev)
+		{
+			*pairStart += std::to_string(i);
+			++pairStart;
+			++i;
+		}
+		firstMesh = pairStart;
+	}
+}
+
 inline glm::mat4 ApplyHierarchy(const GlProj::Utilities::SceneNode<ModelData>& n)
 {
 	auto node = &n;
@@ -180,13 +218,22 @@ LocalSharedPtr<Material> GetDefaultMaterial()
 void PrepareAndRunGame(GLFWwindow* window)
 {
 	Assimp::Importer importer{};
-	auto bunny = importer.ReadFile("./data/models/bunny.obj", aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_SortByPType | aiProcess_GenUVCoords | aiProcess_OptimizeGraph | aiProcess_OptimizeMeshes | aiProcess_GenSmoothNormals); 
+	auto newLogger = Assimp::DefaultLogger::create("AssimpLog.txt", Assimp::Logger::NORMAL, aiDefaultLogStream_STDOUT);
+	auto bunny = importer.ReadFile("./data/models/bunny.obj", aiProcess_Triangulate | aiProcess_SortByPType 
+															| aiProcess_GenUVCoords | aiProcess_OptimizeGraph 
+															| aiProcess_OptimizeMeshes | aiProcess_GenSmoothNormals); 
+
+	importer.SetPropertyInteger(AI_CONFIG_PP_SLM_TRIANGLE_LIMIT, 32767);
+	bunny = importer.ApplyPostProcessing(aiProcess_SplitLargeMeshes | aiProcess_CalcTangentSpace | aiProcess_ValidateDataStructure);
+
 	if (bunny == nullptr)
 	{
 		std::string err;
 		err += importer.GetErrorString();
 		throw std::runtime_error(err);
 	}
+
+	Assimp::DefaultLogger::kill();
 
 	auto& initText = "System Init";
 
@@ -195,9 +242,19 @@ void PrepareAndRunGame(GLFWwindow* window)
 	submeshes.reserve(bunny->mNumMeshes);
 	auto material = GetDefaultMaterial();
 
+	std::vector<std::string> meshNames;
+	meshNames.reserve(bunny->mNumMeshes);
+	std::transform(bunny->mMeshes, bunny->mMeshes + bunny->mNumMeshes, std::back_inserter(meshNames), 
+		[](const auto& x)
+	{
+		return x->mName.C_Str();
+	});
+
+	MakeNamesUnique(meshNames.begin(), meshNames.end());
+
 	for (int i = 0; i < int(bunny->mNumMeshes); ++i)
 	{
-		submeshes.push_back({ RegisterMesh(GetMeshManager(), bunny->mMeshes[i], bunny->mMeshes[i]->mName.C_Str()), 
+		submeshes.push_back({ RegisterMesh(GetMeshManager(), bunny->mMeshes[i], meshNames[i]),
 							  nullptr });
 	}
 
@@ -320,7 +377,7 @@ try
 
 	glDebugMessageCallback(GLDbgCallback, nullptr);
 
-	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
+	//glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
 
 	PrepareAndRunGame(win);
 

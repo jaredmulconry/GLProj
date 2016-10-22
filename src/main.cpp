@@ -1,6 +1,6 @@
 #include "gl_core_4_5.h"
 #include "GLFW/glfw3.h"
-#include "assimp\DefaultLogger.hpp"
+#include "assimp/DefaultLogger.hpp"
 #include "assimp/Importer.hpp"
 #include "assimp/postprocess.h"
 #include "assimp/scene.h"

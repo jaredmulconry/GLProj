@@ -724,7 +724,7 @@ namespace GlProj
 				{
 					auto parent = &node;
 
-					UpdateParent(parent, node.children->begin(); node.children->end());
+					UpdateParent(parent, node.children->begin(), node.children->end());
 				}
 			}
 			return *this;

@@ -5,7 +5,7 @@
 #include "ShadingProgram.hpp"
 #include "Transform.hpp"
 
-#include "glm\mat4x4.hpp"
+#include "glm/mat4x4.hpp"
 
 #include <algorithm>
 #include <string>

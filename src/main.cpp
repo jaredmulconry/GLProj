@@ -35,7 +35,7 @@ inline void APIENTRY GLDbgCallback(GLenum source, GLenum type, GLuint id,
 {
 	thread_local static std::string output;
 	output.clear();
-	output += "GL error:\nSource: ";
+	output += "GL Log:\nSource: ";
 
 	switch (source)
 	{
@@ -60,6 +60,8 @@ inline void APIENTRY GLDbgCallback(GLenum source, GLenum type, GLuint id,
 	}
 	output += "\nType: ";
 
+	auto oStream = &std::cout;
+
 	switch (type)
 	{
 	default:
@@ -67,15 +69,19 @@ inline void APIENTRY GLDbgCallback(GLenum source, GLenum type, GLuint id,
 		break;
 	case GL_DEBUG_TYPE_ERROR:
 		output += "GL_DEBUG_TYPE_ERROR";
+		oStream = &std::cerr;
 		break;
 	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
 		output += "GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR";
+		oStream = &std::cerr;
 		break;
 	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
 		output += "GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR";
+		oStream = &std::cerr;
 		break;
 	case GL_DEBUG_TYPE_PORTABILITY:
 		output += "GL_DEBUG_TYPE_PORTABILITY";
+		oStream = &std::cerr;
 		break;
 	case GL_DEBUG_TYPE_PERFORMANCE:
 		output += "GL_DEBUG_TYPE_PERFORMANCE";
@@ -112,7 +118,7 @@ inline void APIENTRY GLDbgCallback(GLenum source, GLenum type, GLuint id,
 	output += "\nMessage:\n";
 	output += message;
 
-	std::cout << output << "\n\n";
+	(*oStream) << output << "\n\n";
 }
 
 inline glm::mat4 aiToGlm(const aiMatrix4x4& o)
@@ -172,21 +178,30 @@ inline glm::mat4 ApplyHierarchy(const GlProj::Utilities::SceneNode<ModelData>& n
 	return t;
 }
 
-void PopulateGraph(SceneGraph<ModelData>& graph, 
-					GlProj::Utilities::SceneNode<ModelData>* parent, 
-					aiNode* node)
+void AddChildren(SceneGraph<ModelData>& graph,
+	GlProj::Utilities::SceneNode<ModelData>* parent,
+	aiNode* node)
 {
-	parent = graph.emplace(parent, aiToGlm(node->mTransformation),
-							std::vector<unsigned int>(node->mMeshes, node->mMeshes + node->mNumMeshes),
-							node->mName.C_Str());
-
-	auto children = node->mChildren;
-	auto childCount = int(node->mNumChildren);
-
-	for(int i = 0; i < childCount; ++i)
+	for (int i = 0; i < int(node->mNumChildren); ++i)
 	{
-		PopulateGraph(graph, parent, children[i]);
+		graph.emplace(parent, aiToGlm(node->mChildren[i]->mTransformation),
+			std::vector<unsigned int>(node->mChildren[i]->mMeshes, node->mChildren[i]->mMeshes + node->mChildren[i]->mNumMeshes),
+			node->mChildren[i]->mName.C_Str());
 	}
+
+	for (int i = 0; i < int(node->mNumChildren); ++i)
+	{
+		AddChildren(graph, parent->children->data() + i, node->mChildren[i]);
+	}
+}
+
+void PopulateGraph(SceneGraph<ModelData>& graph, aiNode* root)
+{
+	auto parent = graph.emplace(nullptr, aiToGlm(root->mTransformation),
+							std::vector<unsigned int>(root->mMeshes, root->mMeshes + root->mNumMeshes),
+							root->mName.C_Str());
+
+	AddChildren(graph, parent, root);
 }
 
 void glfwExecErrorCallback(int, const char* msg)
@@ -218,12 +233,11 @@ LocalSharedPtr<Material> GetDefaultMaterial()
 void PrepareAndRunGame(GLFWwindow* window)
 {
 	Assimp::Importer importer{};
-	auto newLogger = Assimp::DefaultLogger::create("AssimpLog.txt", Assimp::Logger::NORMAL, aiDefaultLogStream_STDOUT);
-	auto bunny = importer.ReadFile("./data/models/bunny.obj", aiProcess_Triangulate | aiProcess_SortByPType 
+	auto newLogger = Assimp::DefaultLogger::create("AssimpLog.txt", Assimp::Logger::VERBOSE, aiDefaultLogStream_STDOUT);
+	auto bunny = importer.ReadFile("./data/models/armadillo.obj", aiProcess_Triangulate | aiProcess_SortByPType 
 															| aiProcess_GenUVCoords | aiProcess_OptimizeGraph 
 															| aiProcess_OptimizeMeshes | aiProcess_GenSmoothNormals); 
-
-	importer.SetPropertyInteger(AI_CONFIG_PP_SLM_TRIANGLE_LIMIT, 32767);
+	importer.SetPropertyInteger(AI_CONFIG_PP_SLM_TRIANGLE_LIMIT, 0xffff);
 	bunny = importer.ApplyPostProcessing(aiProcess_SplitLargeMeshes | aiProcess_CalcTangentSpace | aiProcess_ValidateDataStructure);
 
 	if (bunny == nullptr)
@@ -259,7 +273,7 @@ void PrepareAndRunGame(GLFWwindow* window)
 	}
 
 	SceneGraph<ModelData> bunnyGraph;
-	PopulateGraph(bunnyGraph, nullptr, bunny->mRootNode);
+	PopulateGraph(bunnyGraph, bunny->mRootNode);
 
 	Model bunnyModel{ submeshes, std::move(bunnyGraph) };
 
@@ -348,6 +362,9 @@ try
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+	glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #ifdef _DEBUG
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 #endif
@@ -363,7 +380,7 @@ try
 	int contextMinorVersion = glfwGetWindowAttrib(win, GLFW_CONTEXT_VERSION_MINOR);
 	
 	std::cout << "Major version is " << contextMajorVersion << '\n';
-	std::cout << "Minor version is " << contextMinorVersion << std::endl;
+	std::cout << "Minor version is " << contextMinorVersion << '\n';
 
 	glfwMakeContextCurrent(win);
 

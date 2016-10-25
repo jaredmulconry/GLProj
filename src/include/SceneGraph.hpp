@@ -324,7 +324,7 @@ namespace GlProj
 			template<typename U>
 			void find_all_cached(const U& x, std::vector<node_type*>& out) const
 			{
-				find_all(x, std::equal_to<>(), out);
+				find_all_cached(x, std::equal_to<>(), out);
 			}
 
 			template<typename U, typename C>
@@ -427,9 +427,9 @@ namespace GlProj
 				auto needUpdate = ReserveSpaceForChildren(children, 1);
 				children.emplace_back(parent, CreateChildList(), data);
 
-				if (needUpdate && parent != nullptr)
+				if (needUpdate)
 				{
-					UpdateParent(parent, children.begin(), children.end() - 1);
+					UpdateParent(children.begin(), children.end() - 1);
 				}
 
 				return &children.back();
@@ -443,7 +443,7 @@ namespace GlProj
 
 				if (needUpdate && parent != nullptr)
 				{
-					UpdateParent(parent, children.begin(), children.end() - 1);
+					UpdateParent(children.begin(), children.end() - 1);
 				}
 
 				return &children.back();
@@ -458,7 +458,7 @@ namespace GlProj
 
 				if (needUpdate && parent != nullptr)
 				{
-					UpdateParent(parent, children.begin(), children.end() - 1);
+					UpdateParent(children.begin(), children.end() - 1);
 				}
 
 				return &children.back();
@@ -494,19 +494,13 @@ namespace GlProj
 				dest.push_back(std::move(*n));
 				n = &dest.back();
 				auto srcUpdatePt = src.erase(removePoint);
-				while (srcUpdatePt != src.end())
-				{
-					UpdateParent(&*srcUpdatePt, srcUpdatePt->children->begin(), srcUpdatePt->children->end());
-					++srcUpdatePt;
-				}
+				UpdateParent(srcUpdatePt, src.end());
 
 				auto destUpdatePt = needsUpdate ? dest.begin() : (dest.begin() + dest.size() - 1);
-				while (destUpdatePt != dest.end())
-				{
-					UpdateParent(&*destUpdatePt, destUpdatePt->children->begin(), destUpdatePt->children->end());
-					++destUpdatePt;
-				}
-				UpdateParent(&dest.back(), dest.back().children->begin(), dest.back().children->end());
+				UpdateParent(destUpdatePt, dest.end());
+
+				//UpdateParent(&dest.back(), dest.back().children->begin(), dest.back().children->end());
+				UpdateParent(dest.end() - 1, dest.end());
 				n->parent = newParent;
 				return n;
 			}
@@ -516,6 +510,19 @@ namespace GlProj
 			using size_type = typename ChildList::size_type;
 			ChildList rootNodes;
 			std::vector<ChildList*> allChildren;
+
+			void UpdateParent(ChildListIterator begin, ChildListIterator end) noexcept
+			{
+				while (begin != end)
+				{
+					if (!begin->children->empty())
+					{
+						auto parent = &(*begin);
+						UpdateParent(parent, begin->children->begin(), begin->children->end());
+					}
+					++begin;
+				}
+			}
 
 			void UpdateParent(node_type* parent, ChildListIterator begin, ChildListIterator end) noexcept
 			{
@@ -567,7 +574,7 @@ namespace GlProj
 				std::move(srcChildren.begin(), srcChildren.end(), std::back_inserter(destChildren));
 
 				auto parentUpdateBegin = previousNeedUpdate ? destChildren.begin() : (destChildren.begin() + previousSize);
-				UpdateParent(dest, parentUpdateBegin, destChildren.end());
+				UpdateParent(parentUpdateBegin, destChildren.end());
 				srcChildren.clear();
 
 				if (destContainsSrc)
@@ -625,11 +632,7 @@ namespace GlProj
 				ChildList& children = (n.parent == nullptr) ? rootNodes : *n.parent->children;
 				auto childPos = children.erase(std::find(children.begin(), children.end(), n));
 
-				while (childPos != children.end())
-				{
-					UpdateParent(&*childPos, childPos->children->begin(), childPos->children->end());
-					++childPos;
-				}
+				UpdateParent(childPos, children.end());
 			}
 
 			void DeleteNode(node_type& n)

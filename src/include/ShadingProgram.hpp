@@ -34,10 +34,11 @@ namespace GlProj
 			using UniformInfoStorage = std::vector<UniformInformation>;
 			using UniformNameBufStorage = std::vector<std::pair<std::string, UniformInformation*>>;
 
-			GLuint programHandle = invalidHandle;
 			VertexAttribStorage attributes;
 			UniformInfoStorage uniforms;
 			UniformNameBufStorage uniformNameRef;
+			GLuint programHandle = invalidHandle;
+			bool transformsAreBatchable = false;
 
 		public:
 			using VertexAttribConstIterator = VertexAttribStorage::const_iterator;

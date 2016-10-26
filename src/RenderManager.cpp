@@ -108,6 +108,8 @@ namespace GlProj
 			RenderableHandle(Mesh* me, Material* ma) : mesh(me), material(ma) {}
 		};
 
+		static const std::string bm_transform_id = "bm_transform";
+
 		static const std::string m_transform_id = "m_transform";
 		static const std::string v_transform_id = "v_transform";
 		static const std::string p_transform_id = "p_transform";
@@ -220,7 +222,7 @@ namespace GlProj
 			{
 				auto pinnedMaterial = materialBegin->lock();
 				auto& materialInUse = usingOverride ? *batch->overrideMaterial : *pinnedMaterial->material;
-				const auto& programInUse = materialInUse.GetProgram();
+				const auto& programInUse = *materialInUse.GetProgram();
 
 				//Bind shared material
 				if (usingOverride)
@@ -247,7 +249,6 @@ namespace GlProj
 					auto pinnedMesh = meshBegin->lock();
 					auto& meshInUse = *pinnedMesh->mesh;
 					meshInUse.Bind();
-					
 
 					while (meshBegin != meshEnd)
 					{

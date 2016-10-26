@@ -39,6 +39,7 @@ namespace GlProj
 			: programHandle(x.programHandle)
 			, attributes(std::move(x.attributes))
 			, uniforms(std::move(x.uniforms))
+			, transformsAreBatchable(x.transformsAreBatchable)
 		{
 			x.programHandle = invalidHandle;
 		}
@@ -53,6 +54,7 @@ namespace GlProj
 				programHandle = x.programHandle;
 				attributes = std::move(x.attributes);
 				uniforms = std::move(x.uniforms);
+				transformsAreBatchable = x.transformsAreBatchable;
 				x.programHandle = invalidHandle;
 			}
 
@@ -127,7 +129,11 @@ namespace GlProj
 			uniforms.clear();
 			uniformNameRef.clear();
 
-			//TODO: Query for vertex attribute and uniform information
+			//In-progress migration from old introspection API to new.
+			//auto numAttribs = GLint(0);
+			//glGetProgramInterfaceiv(GetHandle(), GL_PROGRAM_INPUT, GL_ACTIVE_RESOURCES, &numAttribs);
+
+			
 			GLint attributeCount;
 			glGetProgramiv(GetHandle(), GL_ACTIVE_ATTRIBUTES, &attributeCount);
 			attributes.reserve(attributeCount);
@@ -166,7 +172,7 @@ namespace GlProj
 
 				uniforms.push_back(UniformInformation{nameBuf.get(), GLenum(type), loc, size});
 			}
-
+			
 			std::transform(uniforms.begin(), uniforms.end(), std::back_inserter(uniformNameRef), 
 				[](auto& x) -> UniformNameBufStorage::value_type
 			{

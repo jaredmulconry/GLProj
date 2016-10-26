@@ -19,19 +19,15 @@ namespace GlProj
 			BiTangents,
 			TexCoord0,
 			TexCoord1,
-			TexCoord2,
-			TexCoord3,
 			Colour0,
 			Color0 = Colour0,
-			Colour1,
-			Color1 = Colour1,
 			User,
 		};
 
 		GLenum MeshSlotToGL(MeshSlots s);
 
-		static const constexpr int MaxTextureCoordinates = 4;
-		static const constexpr int MaxColourChannels = 2;
+		static const constexpr int MaxTextureCoordinates = 2;
+		static const constexpr int MaxColourChannels = 1;
 		static const constexpr int MaxColorChannels = MaxColourChannels;
 
 		class Mesh
@@ -42,17 +38,25 @@ namespace GlProj
 			unsigned int primitiveCount;
 			unsigned int vertsPerPrimitive;
 
-			static const constexpr int ReservedVertexSlots = 20;
+			static const constexpr int ReservedVertexSlots = 16;
 
 			void SetAttributePointer(MeshSlots);
-			void EnableAttribute(MeshSlots);
-			void DisableAttribute(MeshSlots);
 		public:
 			Mesh() = default;
 			explicit Mesh(const aiMesh*);
 			Mesh(const Mesh&) = delete;
 			Mesh(Mesh&&) = default;
 			Mesh& operator=(Mesh&&) = default;
+
+			static void EnableAttribute(MeshSlots);
+			static void DisableAttribute(MeshSlots);
+			static void SetAttributePointer(MeshSlots, const MeshDataBuffer&, GLsizei = 0, const void* = nullptr);
+			static void SetAttributeDivisor(MeshSlots, GLuint);
+
+			//Searches through the internal vertex data for a range of empty slots
+			//into which custom vertex data could be bound. Search begins at
+			//the start of User-defined vertex attributes defined by 'User'.
+			int FindAttributeRange(int, int = 0);
 
 			const MeshDataBuffer& GetMeshData(MeshSlots) const;
 			void Bind() const noexcept;

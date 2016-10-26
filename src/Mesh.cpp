@@ -32,59 +32,65 @@ namespace GlProj
 			auto faceCount = mesh->mNumFaces;
 			primitiveCount = mesh->mNumFaces * vertsPerPrimitive;
 
-			arrayBuffer.Bind();
+			Bind();
 			indices = MeshIndexBuffer(faceCount, mesh->mFaces);
 
 			vertexData.resize(ReservedVertexSlots);
 
-			vertexData[MeshSlotToGL(MeshSlots::Positions)] = MeshDataBuffer(GL_ARRAY_BUFFER,
+			auto positionGL = MeshSlotToGL(MeshSlots::Positions);
+			vertexData[positionGL] = MeshDataBuffer(GL_ARRAY_BUFFER,
 				mesh->mNumVertices * sizeof(*mesh->mVertices),
 				mesh->mVertices,
 				GL_FLOAT,
 				3);
 			EnableAttribute(MeshSlots::Positions);
-			SetAttributePointer(MeshSlots::Positions);
+			SetAttributePointer(MeshSlots::Positions, vertexData[positionGL]);
 
 			if (mesh->HasNormals())
 			{
-				vertexData[MeshSlotToGL(MeshSlots::Normals)] = MeshDataBuffer(GL_ARRAY_BUFFER,
+				auto normalGL = MeshSlotToGL(MeshSlots::Normals);
+				vertexData[normalGL] = MeshDataBuffer(GL_ARRAY_BUFFER,
 					mesh->mNumVertices * sizeof(*mesh->mNormals),
 					mesh->mNormals,
 					GL_FLOAT,
 					3);
 				EnableAttribute(MeshSlots::Normals);
-				SetAttributePointer(MeshSlots::Normals);
+				SetAttributePointer(MeshSlots::Normals, vertexData[normalGL]);
 			}
 			if (mesh->HasTangentsAndBitangents())
 			{
-				vertexData[MeshSlotToGL(MeshSlots::Tangents)] = MeshDataBuffer(GL_ARRAY_BUFFER,
+				auto tangentGL = MeshSlotToGL(MeshSlots::Tangents);
+				auto bitangentGL = MeshSlotToGL(MeshSlots::BiTangents);
+				vertexData[tangentGL] = MeshDataBuffer(GL_ARRAY_BUFFER,
 					mesh->mNumVertices * sizeof(*mesh->mTangents),
 					mesh->mTangents,
 					GL_FLOAT,
 					3);
 				EnableAttribute(MeshSlots::Tangents);
-				SetAttributePointer(MeshSlots::Tangents);
+				SetAttributePointer(MeshSlots::Tangents, vertexData[tangentGL]);
 
-				vertexData[MeshSlotToGL(MeshSlots::BiTangents)] = MeshDataBuffer(GL_ARRAY_BUFFER,
+				vertexData[bitangentGL] = MeshDataBuffer(GL_ARRAY_BUFFER,
 					mesh->mNumVertices * sizeof(*mesh->mBitangents),
 					mesh->mBitangents,
 					GL_FLOAT,
 					3);
 				EnableAttribute(MeshSlots::BiTangents);
-				SetAttributePointer(MeshSlots::BiTangents);
+				SetAttributePointer(MeshSlots::BiTangents, vertexData[bitangentGL]);
 			}
 			int uvChannelCount = std::min(static_cast<int>(mesh->GetNumUVChannels()), MaxTextureCoordinates);
 			for (int i = 0; i < uvChannelCount; ++i)
 			{
 				if (mesh->HasTextureCoords(i))
 				{
-					vertexData[MeshSlotToGL(MeshSlots::TexCoord0) + i] = MeshDataBuffer(GL_ARRAY_BUFFER,
+					auto uvGL = MeshSlotToGL(MeshSlots::TexCoord0) + i;
+					auto uvSlot = MeshSlots(uvGL);
+					vertexData[uvGL] = MeshDataBuffer(GL_ARRAY_BUFFER,
 						mesh->mNumVertices * mesh->mNumUVComponents[i],
 						mesh->mTextureCoords[i],
 						GL_FLOAT,
 						mesh->mNumUVComponents[i]);
-					EnableAttribute(MeshSlots(MeshSlotToGL(MeshSlots::TexCoord0) + i));
-					SetAttributePointer(MeshSlots(MeshSlotToGL(MeshSlots::TexCoord0) + i));
+					EnableAttribute(uvSlot);
+					SetAttributePointer(uvSlot, vertexData[uvGL]);
 				}
 			}
 			int colourChannelCount = std::min(static_cast<int>(mesh->GetNumColorChannels()), MaxColourChannels);
@@ -92,13 +98,15 @@ namespace GlProj
 			{
 				if (mesh->HasVertexColors(i))
 				{
-					vertexData[MeshSlotToGL(MeshSlots::Colour0) + i] = MeshDataBuffer(GL_ARRAY_BUFFER,
+					auto colourGL = MeshSlotToGL(MeshSlots::Colour0) + i;
+					auto colourSlot = MeshSlots(colourGL);
+					vertexData[colourGL] = MeshDataBuffer(GL_ARRAY_BUFFER,
 						mesh->mNumVertices * sizeof(*mesh->mColors),
 						mesh->mColors[i],
 						GL_FLOAT,
 						4);
-					EnableAttribute(MeshSlots(MeshSlotToGL(MeshSlots::Colour0) + i));
-					SetAttributePointer(MeshSlots(MeshSlotToGL(MeshSlots::Colour0) + i));
+					EnableAttribute(colourSlot);
+					SetAttributePointer(colourSlot, vertexData[colourGL]);
 				}
 			}
 
@@ -121,11 +129,7 @@ namespace GlProj
 			{
 				return;
 			}
-			Bind();
-			meshData.Bind();
-
-			glVertexAttribPointer(MeshSlotToGL(slot), meshData.GetElementsPerVertex(),
-				meshData.GetDataType(), GL_FALSE, 0, nullptr);
+			SetAttributePointer(slot, meshData);
 		}
 		void Mesh::EnableAttribute(MeshSlots s)
 		{
@@ -136,9 +140,34 @@ namespace GlProj
 			glDisableVertexAttribArray(MeshSlotToGL(s));
 		}
 
+		void Mesh::SetAttributePointer(MeshSlots s, const MeshDataBuffer& b, GLsizei stride, const void* offset)
+		{
+			glVertexAttribPointer(MeshSlotToGL(s), b.GetElementsPerVertex(),
+				b.GetDataType(), GL_FALSE, stride, offset);
+		}
+
+		void Mesh::SetAttributeDivisor(MeshSlots s, GLuint u)
+		{
+			glVertexAttribDivisor(MeshSlotToGL(s), u);
+		}
+
+		int Mesh::FindAttributeRange(int size, int offset)
+		{
+			int startPos = 0;
+
+			auto emptyObj = MeshDataBuffer();
+			auto pos = std::search_n(vertexData.begin() + int(MeshSlots::User) + offset, vertexData.end(), size, emptyObj);
+			if (pos == vertexData.end())
+			{
+				return -1;
+			}
+
+			return int(pos - vertexData.begin());
+		}
+
 		GLenum MeshSlotToGL(MeshSlots s)
 		{
-			return static_cast<GLuint>(s);
+			return GLenum(s);
 		}
 
 		bool operator==(const Mesh& x, const Mesh& y) noexcept

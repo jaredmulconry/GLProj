@@ -82,7 +82,7 @@ void ValidateType<GLint>(const GlProj::Graphics::UniformInformation& t)
 	{
 		std::string err = "Type mismatch on shader uniform \"" + t.name
 			+ "\": \n Actual type: ";
-		err += t.type;
+		err += std::to_string(t.type);
 		err += "\n Provided type: GLint";
 		throw std::logic_error(err);
 	}
@@ -112,7 +112,7 @@ void ValidateType<GLuint>(const GlProj::Graphics::UniformInformation& t)
 	{
 		std::string err = "Type mismatch on shader uniform \"" + t.name
 			+ "\": \n Actual type: ";
-		err += t.type;
+		err += std::to_string(t.type);
 		err += "\n Provided type: GLuint";
 		throw std::logic_error(err);
 	}
@@ -147,7 +147,7 @@ void ValidateType<GLfloat>(const GlProj::Graphics::UniformInformation& t)
 	{
 		std::string err = "Type mismatch on shader uniform \"" + t.name
 			+ "\": \n Actual type: ";
-		err += t.type;
+		err += std::to_string(t.type);
 		err += "\n Provided type: GLfloat";
 		throw std::logic_error(err);
 	}
@@ -173,7 +173,7 @@ void ValidateType<glm::vec2>(const GlProj::Graphics::UniformInformation& t)
 	{
 		std::string err = "Type mismatch on shader uniform \"" + t.name
 			+ "\": \n Actual type: ";
-		err += t.type;
+		err += std::to_string(t.type);
 		err += "\n Provided type: glm::vec2";
 		throw std::logic_error(err);
 	}
@@ -199,7 +199,7 @@ void ValidateType<glm::vec3>(const GlProj::Graphics::UniformInformation& t)
 	{
 		std::string err = "Type mismatch on shader uniform \"" + t.name
 			+ "\": \n Actual type: ";
-		err += t.type;
+		err += std::to_string(t.type);
 		err += "\n Provided type: glm::vec3";
 		throw std::logic_error(err);
 	}
@@ -225,7 +225,7 @@ void ValidateType<glm::vec4>(const GlProj::Graphics::UniformInformation& t)
 	{
 		std::string err = "Type mismatch on shader uniform \"" + t.name
 			+ "\": \n Actual type: ";
-		err += t.type;
+		err += std::to_string(t.type);
 		err += "\n Provided type: glm::vec4";
 		throw std::logic_error(err);
 	}
@@ -247,7 +247,7 @@ void ValidateType<glm::mat2>(const GlProj::Graphics::UniformInformation& t)
 	{
 		std::string err = "Type mismatch on shader uniform \"" + t.name
 			+ "\": \n Actual type: ";
-		err += t.type;
+		err += std::to_string(t.type);
 		err += "\n Provided type: glm::mat2";
 		throw std::logic_error(err);
 	}
@@ -269,7 +269,7 @@ void ValidateType<glm::mat3>(const GlProj::Graphics::UniformInformation& t)
 	{
 		std::string err = "Type mismatch on shader uniform \"" + t.name
 			+ "\": \n Actual type: ";
-		err += t.type;
+		err += std::to_string(t.type);
 		err += "\n Provided type: glm::mat3";
 		throw std::logic_error(err);
 	}
@@ -292,7 +292,7 @@ void ValidateType<glm::mat4>(const GlProj::Graphics::UniformInformation& t)
 	{
 		std::string err = "Type mismatch on shader uniform \"" + t.name
 			+ "\": \n Actual type: ";
-		err += t.type;
+		err += std::to_string(t.type);
 		err += "\n Provided type: glm::mat4";
 		throw std::logic_error(err);
 	}
@@ -304,11 +304,11 @@ void ValidateBounds(const GlProj::Graphics::UniformInformation& t, int s)
 	{
 		std::string err = "Uniform access out of bounds.\nUniform name: " + t.name
 			+ "\nType: ";
-		err += t.type;
+		err += std::to_string(t.type);
 		err += "\nSize: ";
-		err += t.size;
+		err += std::to_string(t.size);
 		err += "\nInput size: ";
-		err += s;
+		err += std::to_string(s);
 		throw std::out_of_range(err);
 	}
 }
@@ -488,39 +488,6 @@ namespace GlProj
 		bool operator>=(const Material& x, const Material& y) noexcept
 		{
 			return !(x < y);
-		}
-		void ApplyTransformUniforms(Material& mat, const glm::mat4& model, const Camera& cam)
-		{
-			static const std::string ModelName("model_transform");
-			static const std::string ViewName("view_transform");
-			static const std::string ProjectionName("projection_transform");
-			static const std::string MVPName("mvp_transform");
-
-			auto prog = mat.GetProgram();
-			//Model matrix
-			auto modelUniform = prog->FindUniform(ModelName);
-			if (modelUniform != prog->UniformsEnd())
-			{
-				mat.SetUniform(*modelUniform, model);
-			}
-			//View matrix
-			auto viewUniform = prog->FindUniform(ViewName);
-			if (viewUniform != prog->UniformsEnd())
-			{
-				mat.SetUniform(*viewUniform, cam.View());
-			}
-			//Projection matrix
-			auto projectionUniform = prog->FindUniform(ProjectionName);
-			if (projectionUniform != prog->UniformsEnd())
-			{
-				mat.SetUniform(*projectionUniform, cam.Projection());
-			}
-			//Model-View-Projection matrix
-			auto mvpUniform = prog->FindUniform(MVPName);
-			if (mvpUniform != prog->UniformsEnd())
-			{
-				mat.SetUniform(*mvpUniform, cam.Projection() * model);
-			}
 		}
 	}
 }

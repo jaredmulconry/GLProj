@@ -71,7 +71,5 @@ namespace GlProj
 			friend bool operator>(const Material&, const Material&) noexcept;
 			friend bool operator>=(const Material&, const Material&) noexcept;
 		};
-
-		void ApplyTransformUniforms(Material&, const glm::mat4&, const Camera&);
 	}
 }

@@ -90,7 +90,7 @@ namespace GlProj
 		}
 		bool operator==(const MeshDataBuffer& x, const MeshDataBuffer& y) noexcept
 		{
-			return x.meshDataHandle == y.meshDataHandle && x.bufferType == y.bufferType;
+			return x.meshDataHandle == y.meshDataHandle;
 		}
 		bool operator!=(const MeshDataBuffer& x, const MeshDataBuffer& y) noexcept
 		{

@@ -29,6 +29,8 @@
 
 using namespace GlProj::Graphics;
 
+static const constexpr bool dumpCapabilities = true;
+
 inline void APIENTRY GLDbgCallback(GLenum source, GLenum type, GLuint id,
 	GLenum severity, GLsizei length, const GLchar* message,
 	const void*)
@@ -318,7 +320,7 @@ void PrepareAndRunGame(GLFWwindow* window)
 	while (!glfwWindowShouldClose(window))
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
-				GL_STENCIL_BUFFER_BIT);
+				GL_STENCIL_BUFFER_BIT); 
 
 		auto newTime = glfwGetTime();
 		auto delta = newTime - prevTime;
@@ -376,17 +378,34 @@ try
 		return EXIT_FAILURE;
 	}
 
-	int contextMajorVersion = glfwGetWindowAttrib(win, GLFW_CONTEXT_VERSION_MAJOR);
-	int contextMinorVersion = glfwGetWindowAttrib(win, GLFW_CONTEXT_VERSION_MINOR);
-	
-	std::cout << "Major version is " << contextMajorVersion << '\n';
-	std::cout << "Minor version is " << contextMinorVersion << '\n';
-
 	glfwMakeContextCurrent(win);
 
 	if (ogl_LoadFunctions() != ogl_LOAD_SUCCEEDED)
 	{
 		return EXIT_FAILURE;
+	}
+
+	if (dumpCapabilities)
+	{
+		int contextMajorVersion = glfwGetWindowAttrib(win, GLFW_CONTEXT_VERSION_MAJOR);
+		int contextMinorVersion = glfwGetWindowAttrib(win, GLFW_CONTEXT_VERSION_MINOR);
+		int maxVertAttribs = 0, maxVertAttribBinds = 0;
+		int maxVertUniformBlocks = 0, maxVertUniformComps = 0, maxVertUniformVecs = 0;
+
+
+		glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertAttribs);
+		glGetIntegerv(GL_MAX_VERTEX_ATTRIB_BINDINGS, &maxVertAttribBinds);
+		glGetIntegerv(GL_MAX_VERTEX_UNIFORM_BLOCKS, &maxVertUniformBlocks);
+		glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, &maxVertUniformComps);
+		glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxVertUniformVecs);
+
+		std::cout << "Major version is " << contextMajorVersion << '\n';
+		std::cout << "Minor version is " << contextMinorVersion << '\n';
+		std::cout << "GL_MAX_VERTEX_ATTRIBS " << maxVertAttribs << '\n';
+		std::cout << "GL_MAX_VERTEX_ATTRIB_BINDINGS " << maxVertAttribBinds << '\n';
+		std::cout << "GL_MAX_VERTEX_UNIFORM_BLOCKS " << maxVertUniformBlocks << '\n';
+		std::cout << "GL_MAX_VERTEX_UNIFORM_COMPONENTS " << maxVertUniformComps << '\n';
+		std::cout << "GL_MAX_VERTEX_UNIFORM_VECTORS " << maxVertUniformVecs << '\n';
 	}
 
 	glEnable(GL_DEPTH_TEST);

@@ -201,7 +201,7 @@ namespace GlProj
 			}
 		}
 
-		void DrawBatch(RenderManager* mngr, RenderBatch* batch)
+		void DrawBatch(RenderManager*, RenderBatch* batch)
 		{
 			batch->OptimiseBatch();
 
@@ -222,7 +222,6 @@ namespace GlProj
 			{
 				auto pinnedMaterial = materialBegin->lock();
 				auto& materialInUse = usingOverride ? *batch->overrideMaterial : *pinnedMaterial->material;
-				const auto& programInUse = *materialInUse.GetProgram();
 
 				//Bind shared material
 				if (usingOverride)
@@ -272,9 +271,9 @@ namespace GlProj
 			}
 		}
 
-		void DrawRenderable(RenderManager* mngr,
-			RenderBatch* batch,
-			RenderableHandle* h)
+		void DrawRenderable(RenderManager*,
+			RenderBatch*,
+			RenderableHandle*)
 		{
 		}
 

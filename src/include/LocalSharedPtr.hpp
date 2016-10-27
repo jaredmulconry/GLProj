@@ -192,7 +192,7 @@ namespace GlProj
 				Decrement();
 			}
 
-			constexpr LocalSharedPtr(std::nullptr_t p) noexcept
+			constexpr LocalSharedPtr(std::nullptr_t) noexcept
 				: ref(nullptr)
 				, objRef(nullptr)
 			{}

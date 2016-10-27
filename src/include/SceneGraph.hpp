@@ -255,10 +255,10 @@ namespace GlProj
 				auto found = std::find_if(rootNodes.begin(), rootNodes.end(), finder);
 				if (found != rootNodes.end()) return const_cast<node_type*>(&*found);
 
-				for (auto& c : allChildren)
+				for (auto& child : allChildren)
 				{
-					auto foundInChildren = std::find_if(c->begin(), c->end(), finder);
-					if (foundInChildren != c->end()) return const_cast<node_type*>(&*foundInChildren);
+					auto foundInChildren = std::find_if(child->begin(), child->end(), finder);
+					if (foundInChildren != child->end()) return const_cast<node_type*>(&*foundInChildren);
 				}
 
 				return nullptr;
@@ -350,9 +350,9 @@ namespace GlProj
 
 				std::for_each(rootNodes.begin(), rootNodes.end(), filler);
 
-				for (auto& c : allChildren)
+				for (auto& child : allChildren)
 				{
-					std::for_each(c->begin(), c->end(), filler);
+					std::for_each(child->begin(), child->end(), filler);
 				}
 			}
 

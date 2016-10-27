@@ -44,7 +44,6 @@ namespace GlProj
 			c1 = c3;
 			auto c4 = std::move(c3);
 			c2 = std::move(c4);
-			auto c5 = nullptr;
 			c3 = nullptr;
 			auto c6 = LocalSharedPtr<T>(ptrToRelated);
 			auto c7 = LocalSharedPtr<U>();

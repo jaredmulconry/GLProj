@@ -34,8 +34,8 @@ namespace GlProj
 			switch (type)
 			{
 			default:
-				std::terminate();
-				return glm::mat4(1.0f);
+				std::terminate(); //Immediately fail
+
 			case CameraType::Perspective:
 				return glm::perspective(data.perspective.fov, data.perspective.aspect, nearPlane, farPlane);
 			case CameraType::Orthographic:

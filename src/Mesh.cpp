@@ -153,8 +153,6 @@ namespace GlProj
 
 		int Mesh::FindAttributeRange(int size, int offset)
 		{
-			int startPos = 0;
-
 			auto emptyObj = MeshDataBuffer();
 			auto pos = std::search_n(vertexData.begin() + int(MeshSlots::User) + offset, vertexData.end(), size, emptyObj);
 			if (pos == vertexData.end())

@@ -92,14 +92,14 @@ namespace GlProj
 			}
 
 			FILE* shaderFile = std::fopen(path.c_str(), "r");
-			auto err = errno;
-			if(err != 0)
+			auto errnum = errno;
+			if(errnum != 0)
 			{
 				std::string errMessage = "Shader file could not be opened.\n";
 				errMessage += "File: "; 
 				errMessage += path + '\n';
 				errMessage += "Error: ";
-				errMessage += std::strerror(err);
+				errMessage += std::strerror(errnum);
 				errMessage += '\n';
 
 				throw std::runtime_error(errMessage);

@@ -32,7 +32,7 @@ using namespace GlProj::Graphics;
 static const constexpr bool dumpCapabilities = true;
 
 inline void APIENTRY GLDbgCallback(GLenum source, GLenum type, GLuint id,
-	GLenum severity, GLsizei length, const GLchar* message,
+	GLenum severity, GLsizei, const GLchar* message,
 	const void*)
 {
 	thread_local static std::string output;
@@ -146,7 +146,7 @@ inline void MakeNamesUnique(I first, I last)
 		int i = 0;
 
 		std::string prev = *pairStart;
-		auto first = pairStart;
+		first = pairStart;
 		//First duplicate will have a 0-suffix
 		*first += std::to_string(i);
 		++i;
@@ -235,7 +235,9 @@ LocalSharedPtr<Material> GetDefaultMaterial()
 void PrepareAndRunGame(GLFWwindow* window)
 {
 	Assimp::Importer importer{};
-	auto newLogger = Assimp::DefaultLogger::create("AssimpLog.txt", Assimp::Logger::VERBOSE, aiDefaultLogStream_STDOUT);
+#ifdef _DEBUG
+	Assimp::DefaultLogger::create("AssimpLog.txt", Assimp::Logger::VERBOSE, aiDefaultLogStream_STDOUT);
+#endif
 	auto bunny = importer.ReadFile("./data/models/armadillo.obj", aiProcess_Triangulate | aiProcess_SortByPType 
 															| aiProcess_GenUVCoords | aiProcess_OptimizeGraph 
 															| aiProcess_OptimizeMeshes | aiProcess_GenSmoothNormals); 
@@ -249,7 +251,7 @@ void PrepareAndRunGame(GLFWwindow* window)
 		throw std::runtime_error(err);
 	}
 
-	Assimp::DefaultLogger::kill();
+	Assimp::DefaultLogger::kill(); 
 
 	auto& initText = "System Init";
 
@@ -369,6 +371,8 @@ try
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #ifdef _DEBUG
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+#else
+	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_FALSE);
 #endif
 
 	auto win = glfwCreateWindow(1280, 720, "Bad Window", nullptr, nullptr);
@@ -409,9 +413,11 @@ try
 	}
 
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_DEBUG_OUTPUT);
 
+#ifdef _DEBUG
+	glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(GLDbgCallback, nullptr);
+#endif
 
 	//glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
 

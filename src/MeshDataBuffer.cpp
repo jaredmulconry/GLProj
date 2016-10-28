@@ -5,15 +5,16 @@ namespace GlProj
 {
 	namespace Graphics
 	{
-		MeshDataBuffer::MeshDataBuffer(GLenum bufferType, GLsizeiptr dataSize, const GLvoid* data, GLenum dataType, GLint elemsPerVert, GLenum usage)
-			: bufferType(bufferType)
+		MeshDataBuffer::MeshDataBuffer(BufferType bufferType, GLsizeiptr dataSize, const GLvoid* data, 
+										GLenum dataType, GLint elemsPerVert, BufferUsage usage)
+			: bufferType(GLenum(bufferType))
 			, dataType(dataType)
 			, elementsPerVertex(elemsPerVert)
 		{
 			glGenBuffers(1, &meshDataHandle);
-			glBindBuffer(bufferType, meshDataHandle);
+			glBindBuffer(this->bufferType, meshDataHandle);
 
-			glBufferData(bufferType, dataSize, data, usage);
+			glBufferData(this->bufferType, dataSize, data, GLenum(usage));
 		}
 		MeshDataBuffer::MeshDataBuffer(MeshDataBuffer&& x) noexcept
 			: meshDataHandle(x.meshDataHandle)
@@ -52,9 +53,9 @@ namespace GlProj
 		{
 			return meshDataHandle;
 		}
-		GLenum MeshDataBuffer::GetBufferType() const noexcept
+		BufferType MeshDataBuffer::GetBufferType() const noexcept
 		{
-			return bufferType;
+			return BufferType(bufferType);
 		}
 		GLenum MeshDataBuffer::GetDataType() const noexcept
 		{
@@ -66,27 +67,27 @@ namespace GlProj
 		}
 		void MeshDataBuffer::UpdateData(GLintptr offset, GLsizeiptr dataSize, const GLvoid * data) const noexcept
 		{
-			glBufferSubData(GetBufferType(), offset, dataSize, data);
+			glBufferSubData(bufferType, offset, dataSize, data);
 		}
 		void* MeshDataBuffer::MapBuffer(GLintptr offset, GLsizeiptr dataSize, GLbitfield access) const noexcept
 		{
-			return glMapBufferRange(GetBufferType(), offset, dataSize, access);
+			return glMapBufferRange(bufferType, offset, dataSize, access);
 		}
 		void MeshDataBuffer::UnmapBuffer() const noexcept
 		{
-			glUnmapBuffer(GetBufferType());
+			glUnmapBuffer(bufferType);
 		}
 		void MeshDataBuffer::Bind() const noexcept
 		{
-			glBindBuffer(GetBufferType(), GetHandle());
+			glBindBuffer(bufferType, GetHandle());
 		}
 		void MeshDataBuffer::BindBase(GLuint index) const noexcept
 		{
-			glBindBufferBase(GetBufferType(), index, GetHandle());
+			glBindBufferBase(bufferType, index, GetHandle());
 		}
 		void MeshDataBuffer::BindRange(GLuint index, GLintptr offset, GLsizeiptr size) const noexcept
 		{
-			glBindBufferRange(GetBufferType(), index, GetHandle(), offset, size);
+			glBindBufferRange(bufferType, index, GetHandle(), offset, size);
 		}
 		bool operator==(const MeshDataBuffer& x, const MeshDataBuffer& y) noexcept
 		{

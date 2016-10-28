@@ -38,7 +38,7 @@ namespace GlProj
 			vertexData.resize(ReservedVertexSlots);
 
 			auto positionGL = MeshSlotToGL(MeshSlots::Positions);
-			vertexData[positionGL] = MeshDataBuffer(GL_ARRAY_BUFFER,
+			vertexData[positionGL] = MeshDataBuffer(BufferType::array,
 				mesh->mNumVertices * sizeof(*mesh->mVertices),
 				mesh->mVertices,
 				GL_FLOAT,
@@ -49,7 +49,7 @@ namespace GlProj
 			if (mesh->HasNormals())
 			{
 				auto normalGL = MeshSlotToGL(MeshSlots::Normals);
-				vertexData[normalGL] = MeshDataBuffer(GL_ARRAY_BUFFER,
+				vertexData[normalGL] = MeshDataBuffer(BufferType::array,
 					mesh->mNumVertices * sizeof(*mesh->mNormals),
 					mesh->mNormals,
 					GL_FLOAT,
@@ -61,7 +61,7 @@ namespace GlProj
 			{
 				auto tangentGL = MeshSlotToGL(MeshSlots::Tangents);
 				auto bitangentGL = MeshSlotToGL(MeshSlots::BiTangents);
-				vertexData[tangentGL] = MeshDataBuffer(GL_ARRAY_BUFFER,
+				vertexData[tangentGL] = MeshDataBuffer(BufferType::array,
 					mesh->mNumVertices * sizeof(*mesh->mTangents),
 					mesh->mTangents,
 					GL_FLOAT,
@@ -69,7 +69,7 @@ namespace GlProj
 				EnableAttribute(MeshSlots::Tangents);
 				SetAttributePointer(MeshSlots::Tangents, vertexData[tangentGL]);
 
-				vertexData[bitangentGL] = MeshDataBuffer(GL_ARRAY_BUFFER,
+				vertexData[bitangentGL] = MeshDataBuffer(BufferType::array,
 					mesh->mNumVertices * sizeof(*mesh->mBitangents),
 					mesh->mBitangents,
 					GL_FLOAT,
@@ -84,7 +84,7 @@ namespace GlProj
 				{
 					auto uvGL = MeshSlotToGL(MeshSlots::TexCoord0) + i;
 					auto uvSlot = MeshSlots(uvGL);
-					vertexData[uvGL] = MeshDataBuffer(GL_ARRAY_BUFFER,
+					vertexData[uvGL] = MeshDataBuffer(BufferType::array,
 						mesh->mNumVertices * mesh->mNumUVComponents[i],
 						mesh->mTextureCoords[i],
 						GL_FLOAT,
@@ -100,7 +100,7 @@ namespace GlProj
 				{
 					auto colourGL = MeshSlotToGL(MeshSlots::Colour0) + i;
 					auto colourSlot = MeshSlots(colourGL);
-					vertexData[colourGL] = MeshDataBuffer(GL_ARRAY_BUFFER,
+					vertexData[colourGL] = MeshDataBuffer(BufferType::array,
 						mesh->mNumVertices * sizeof(*mesh->mColors),
 						mesh->mColors[i],
 						GL_FLOAT,

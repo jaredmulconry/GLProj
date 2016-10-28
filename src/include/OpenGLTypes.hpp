@@ -1,12 +1,10 @@
 #pragma once
 
-#if !defined(__gl_h_)
-#if !defined(__GL_H__)
-
 namespace GlProj
 {
 	namespace Graphics
 	{
+#if !defined(__gl_h_) && !defined(__GL_H__)
 		typedef unsigned int GLenum;
 		typedef unsigned char GLboolean;
 		typedef unsigned int GLbitfield;
@@ -22,8 +20,7 @@ namespace GlProj
 		typedef double GLdouble;
 		typedef double GLclampd;
 		typedef void GLvoid;
+#endif
+		//TODO: Move definitions of major opengl-related types here
 	}
 }
-
-#endif
-#endif

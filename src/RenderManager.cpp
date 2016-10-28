@@ -2,6 +2,7 @@
 #include "Camera.hpp"
 #include "Material.hpp"
 #include "Mesh.hpp"
+#include "MeshDataBuffer.hpp"
 #include "ShadingProgram.hpp"
 #include "Transform.hpp"
 
@@ -25,9 +26,21 @@ namespace GlProj
 			friend void DrawBatch(RenderManager*, RenderBatch*);
 			friend void DrawRenderable(RenderManager*, RenderBatch*, RenderableHandle*);
 
+			static const constexpr auto MaxBatchedDraws = GLsizeiptr(500);
+
+
 		public:
+			MeshDataBuffer transformBuffer;
 			std::vector<LocalWeakPtr<RenderBatch>> batches;
 			bool dirty = true;
+
+			RenderManager() = default;
+			explicit RenderManager(GLsizeiptr s)
+				:transformBuffer(BufferType::array, MaxBatchedDraws * sizeof(glm::mat4), nullptr, GL_FLOAT, 4, BufferUsage::stream_draw)
+			{
+
+			}
+
 			static bool OrderBatchByType(const LocalWeakPtr<RenderBatch>& x,
 				const LocalWeakPtr<RenderBatch>& y) noexcept;
 			static bool OrderBatchByPriority(const LocalWeakPtr<RenderBatch>& x,
@@ -109,7 +122,6 @@ namespace GlProj
 		};
 
 		static const std::string bm_transform_id = "bm_transform";
-
 		static const std::string m_transform_id = "m_transform";
 		static const std::string v_transform_id = "v_transform";
 		static const std::string p_transform_id = "p_transform";

@@ -253,7 +253,7 @@ void PrepareAndRunGame(GLFWwindow* window)
 
 	Assimp::DefaultLogger::kill(); 
 
-	auto& initText = "System Init";
+	const auto& initText = "System Init";
 
 	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, sizeof(initText), initText);
 	std::vector<Renderable> submeshes; 
@@ -311,7 +311,7 @@ void PrepareAndRunGame(GLFWwindow* window)
 
 	glPopDebugGroup();
 
-	auto& renderingGroup = "Render loop";
+	const auto& renderingGroup = "Render loop";
 
 	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, sizeof(renderingGroup), renderingGroup);
 

@@ -130,33 +130,35 @@ namespace GlProj
 			uniformNameRef.clear();
 
 			//In-progress migration from old introspection API to new.
-			//auto numAttribs = GLint(0);
-			//glGetProgramInterfaceiv(GetHandle(), GL_PROGRAM_INPUT, GL_ACTIVE_RESOURCES, &numAttribs);
+			auto numAttribs = GLint(0);
+			glGetProgramInterfaceiv(GetHandle(), GL_PROGRAM_INPUT, GL_ACTIVE_RESOURCES, &numAttribs);
+			auto maxAttribNameLen = GLint(0);
+			glGetProgramInterfaceiv(GetHandle(), GL_PROGRAM_INPUT, GL_MAX_NAME_LENGTH, &maxAttribNameLen);
 
-			
-			GLint attributeCount;
-			glGetProgramiv(GetHandle(), GL_ACTIVE_ATTRIBUTES, &attributeCount);
-			attributes.reserve(attributeCount);
-			GLint nameLengthMax;
-			glGetProgramiv(GetHandle(), GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &nameLengthMax);
-			auto nameBuf = std::make_unique<char[]>(nameLengthMax);
+			const GLenum attribProperties[] = { GL_NAME_LENGTH, GL_TYPE, GL_LOCATION, GL_ARRAY_SIZE };
+			std::string attribNameBuf(maxAttribNameLen, '\0');
 
-			for (GLint i = 0; i < attributeCount; ++i)
+			for (GLint i = 0; i < numAttribs; ++i)
 			{
-				nameBuf[0] = '\0';
-				GLint size;
-				GLenum type;
-				glGetActiveAttrib(GetHandle(), GLuint(i), nameLengthMax, nullptr, &size, &type, nameBuf.get());
-				GLint loc = glGetAttribLocation(GetHandle(), nameBuf.get());
-				attributes.push_back(VertexAttribute{nameBuf.get(), type, loc, size});
+				GLint attribInfo[sizeof(attribProperties) / sizeof(*attribProperties)];
+				glGetProgramResourceiv(GetHandle(), GL_PROGRAM_INPUT, i, sizeof(attribProperties) / sizeof(*attribProperties), attribProperties,
+					sizeof(attribProperties) / sizeof(*attribProperties), nullptr, attribInfo);
+
+				attribNameBuf.resize(attribInfo[0], '\0');
+
+				glGetProgramResourceName(GetHandle(), GL_PROGRAM_INPUT, i, attribInfo[0], nullptr, &*(attribNameBuf.begin()));
+				attribNameBuf.resize(attribNameBuf.size() - 1);
+
+				attributes.push_back({ attribNameBuf, GLenum(attribInfo[1]), attribInfo[2], attribInfo[3] });
 			}
 
 			GLint uniformCount;
 			glGetProgramiv(GetHandle(), GL_ACTIVE_UNIFORMS, &uniformCount);
 			uniforms.reserve(uniformCount);
 
+			auto nameLengthMax = GLint(0);
 			glGetProgramiv(GetHandle(), GL_ACTIVE_UNIFORM_MAX_LENGTH, &nameLengthMax);
-			nameBuf = std::make_unique<char[]>(nameLengthMax);
+			auto nameBuf = std::make_unique<char[]>(nameLengthMax);
 
 			for (GLint i = 0; i < uniformCount; ++i)
 			{

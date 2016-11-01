@@ -134,6 +134,7 @@ namespace GlProj
 			glGetProgramInterfaceiv(GetHandle(), GL_PROGRAM_INPUT, GL_ACTIVE_RESOURCES, &numAttribs);
 			auto maxAttribNameLen = GLint(0);
 			glGetProgramInterfaceiv(GetHandle(), GL_PROGRAM_INPUT, GL_MAX_NAME_LENGTH, &maxAttribNameLen);
+			attributes.reserve(numAttribs);
 
 			const GLenum attribProperties[] = { GL_NAME_LENGTH, GL_TYPE, GL_LOCATION, GL_ARRAY_SIZE };
 			std::string attribNameBuf(maxAttribNameLen, '\0');
@@ -152,27 +153,28 @@ namespace GlProj
 				attributes.push_back({ attribNameBuf, GLenum(attribInfo[1]), attribInfo[2], attribInfo[3] });
 			}
 
-			GLint uniformCount;
-			glGetProgramiv(GetHandle(), GL_ACTIVE_UNIFORMS, &uniformCount);
-			uniforms.reserve(uniformCount);
+			auto numActiveUniforms = GLint();
+			glGetProgramInterfaceiv(GetHandle(), GL_UNIFORM, GL_ACTIVE_RESOURCES, &numActiveUniforms);
+			auto maxUniformNameLen = GLint();
+			glGetProgramInterfaceiv(GetHandle(), GL_UNIFORM, GL_MAX_NAME_LENGTH, &maxUniformNameLen);
+			uniforms.reserve(numActiveUniforms);
 
-			auto nameLengthMax = GLint(0);
-			glGetProgramiv(GetHandle(), GL_ACTIVE_UNIFORM_MAX_LENGTH, &nameLengthMax);
-			auto nameBuf = std::make_unique<char[]>(nameLengthMax);
+			auto uniformNameBuf = std::string(maxUniformNameLen, '\0');
 
-			for (GLint i = 0; i < uniformCount; ++i)
+			const GLenum uniformProperties[] = { GL_NAME_LENGTH, GL_TYPE, GL_LOCATION, GL_ARRAY_SIZE };
+
+			for (GLint i = 0; i < numActiveUniforms; ++i)
 			{
-				nameBuf[0] = '\0';
-				GLint size;
-				GLint type;
-				GLint loc;
-				auto idx = GLuint(i);
-				glGetActiveUniformsiv(GetHandle(), 1, &idx, GL_UNIFORM_SIZE, &size);
-				glGetActiveUniformsiv(GetHandle(), 1, &idx, GL_UNIFORM_TYPE, &type);
-				glGetActiveUniformName(GetHandle(), idx, nameLengthMax, nullptr, nameBuf.get());
-				loc = glGetUniformLocation(GetHandle(), nameBuf.get());
+				GLint uniformInfo[sizeof(uniformProperties) / sizeof(*uniformProperties)];
+				glGetProgramResourceiv(GetHandle(), GL_UNIFORM, i, sizeof(uniformProperties) / sizeof(*uniformProperties), uniformProperties,
+					sizeof(uniformProperties) / sizeof(*uniformProperties), nullptr, uniformInfo);
 
-				uniforms.push_back(UniformInformation{nameBuf.get(), GLenum(type), loc, size});
+				uniformNameBuf.resize(uniformInfo[0], '\0');
+
+				glGetProgramResourceName(GetHandle(), GL_UNIFORM, i, uniformInfo[0], nullptr, &*(uniformNameBuf.begin()));
+				uniformNameBuf.resize(uniformNameBuf.size() - 1);
+
+				uniforms.push_back({ uniformNameBuf, GLenum(uniformInfo[1]), uniformInfo[2], uniformInfo[3] });
 			}
 			
 			std::transform(uniforms.begin(), uniforms.end(), std::back_inserter(uniformNameRef), 

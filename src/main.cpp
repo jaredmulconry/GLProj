@@ -315,6 +315,8 @@ void PrepareAndRunGame(GLFWwindow* window)
 
 	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, sizeof(renderingGroup), renderingGroup);
 
+	importer.FreeScene();
+
 	float angle = 0.0f;
 	const float rotationSpeed = 0.2f;
 	auto prevTime = glfwGetTime();
@@ -417,9 +419,8 @@ try
 #ifdef _DEBUG
 	glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(GLDbgCallback, nullptr);
+	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 #endif
-
-	//glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
 
 	PrepareAndRunGame(win);
 

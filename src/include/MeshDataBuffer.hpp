@@ -50,7 +50,7 @@ namespace GlProj
 
 			MeshDataBuffer() noexcept = default;
 			MeshDataBuffer(const MeshDataBuffer&) = delete;
-			MeshDataBuffer(BufferType, GLsizeiptr, const GLvoid*, GLenum, GLint, BufferUsage = BufferUsage::static_read);
+			MeshDataBuffer(BufferType, GLsizeiptr, const GLvoid*, GLenum, GLint, BufferUsage = BufferUsage::static_draw);
 			MeshDataBuffer(MeshDataBuffer&&) noexcept;
 			MeshDataBuffer& operator=(MeshDataBuffer&&) noexcept;
 			~MeshDataBuffer();

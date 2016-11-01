@@ -28,15 +28,14 @@ namespace GlProj
 
 			static const constexpr auto MaxBatchedDraws = GLsizeiptr(500);
 
-
 		public:
 			MeshDataBuffer transformBuffer;
 			std::vector<LocalWeakPtr<RenderBatch>> batches;
 			bool dirty = true;
 
-			RenderManager() = default;
-			explicit RenderManager(GLsizeiptr s)
-				:transformBuffer(BufferType::array, MaxBatchedDraws * sizeof(glm::mat4), nullptr, GL_FLOAT, 4, BufferUsage::stream_draw)
+			explicit RenderManager(GLsizeiptr s = MaxBatchedDraws)
+				:transformBuffer(BufferType::array, s * sizeof(glm::mat4), nullptr, GL_FLOAT, 4, BufferUsage::stream_draw)
+				, batches()
 			{
 
 			}
@@ -141,7 +140,7 @@ namespace GlProj
 
 		RenderManager* GetRenderManager()
 		{
-			static RenderManager manager;
+			static RenderManager manager{};
 			return &manager;
 		}
 

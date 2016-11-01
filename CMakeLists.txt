@@ -40,9 +40,9 @@ add_executable(GLProj ${SRCS} ${STB_SRCS})
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
 		CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-	target_compile_options(GLProj PUBLIC -Wall)
+	target_compile_options(GLProj PUBLIC -Wall -Wextra -pedantic)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-	target_compile_options(GLProj PUBLIC /W4)
+	target_compile_options(GLProj PUBLIC /W4 /sdl)
 endif()
 
 target_link_libraries(GLProj glfw)

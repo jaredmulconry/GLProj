@@ -21,9 +21,9 @@ namespace GlProj
 		template<typename T>
 		struct SceneNode
 		{
-			SceneNode() noexcept = default;
+			SceneNode() noexcept(noexcept(T())) = default;
 			template<typename... Us>
-			SceneNode(SceneNode* p, std::vector<SceneNode>* c, Us&&... values)
+			SceneNode(SceneNode* p, std::vector<SceneNode>* c, Us&&... values) noexcept(noexcept(T(std::forward<Us>(values)...)))
 				:data(std::forward<Us>(values)...)
 				, parent(p)
 				, children(c)
@@ -35,28 +35,27 @@ namespace GlProj
 		};
 
 		template<typename T>
-		bool operator==(const SceneNode<T>& x, const SceneNode<T>& y)
+		bool operator==(const SceneNode<T>& x, const SceneNode<T>& y) noexcept
 		{
 			return x.children == y.children;
 		}
 		template<typename T>
-		bool operator!=(const SceneNode<T>& x, const SceneNode<T>& y)
+		bool operator!=(const SceneNode<T>& x, const SceneNode<T>& y) noexcept
 		{
 			return !(x == y);
 		}
 
 		///Depth-first iterator over a scene graph
 		template<typename T>
-		struct SceneGraphIterator :
-			public std::iterator<std::forward_iterator_tag,
-			T>
+		struct SceneGraphIterator
 		{
 			friend SceneGraph<T>;
 			friend SceneGraphConstIterator<T>;
-			using base_t = std::iterator<std::forward_iterator_tag,
-				T>;
-			using reference = typename base_t::reference;
-			using pointer = typename base_t::reference;
+			using value_type = T;
+			using iterator_category = std::forward_iterator_tag;
+			using difference_type = std::ptrdiff_t;
+			using reference = value_type&;
+			using pointer = value_type*;
 
 			SceneNode<T>* current;
 			SceneGraph<T>* owner;
@@ -66,12 +65,12 @@ namespace GlProj
 				:current(current)
 				, owner(owner)
 			{}
-			explicit SceneGraphIterator(const SceneGraphIterator<T>& x)
+			SceneGraphIterator(const SceneGraphIterator<T>& x) noexcept
 				:current(x.current)
 				, owner(x.owner)
 			{}
 
-			SceneGraphIterator& operator=(const SceneGraphIterator<T>& x)
+			SceneGraphIterator& operator=(const SceneGraphIterator<T>& x) noexcept
 			{
 				current = x.current;
 				owner = x.owner;
@@ -80,20 +79,20 @@ namespace GlProj
 			}
 
 
-			reference operator*()
+			reference operator*() noexcept
 			{
 				return current->data;
 			}
-			reference operator*() const
+			reference operator*() const noexcept
 			{
 				return current->data;
 			}
 
-			pointer operator->()
+			pointer operator->() noexcept(noexcept(&current->data))
 			{
 				return &current->data;
 			}
-			pointer operator->()const
+			pointer operator->()const noexcept(noexcept(&current->data))
 			{
 				return &current->data;
 			}
@@ -117,16 +116,15 @@ namespace GlProj
 		};
 		///Depth-first iterator over a scene graph
 		template<typename T>
-		struct SceneGraphConstIterator :
-			public std::iterator<std::forward_iterator_tag,
-			const T>
+		struct SceneGraphConstIterator
 		{
 			friend SceneGraph<T>;
 			friend SceneGraphIterator<T>;
-			using base_t = std::iterator<std::forward_iterator_tag,
-				T>;
-			using reference = typename base_t::reference;
-			using pointer = typename base_t::pointer;
+			using value_type = T;
+			using iterator_category = std::forward_iterator_tag;
+			using difference_type = std::ptrdiff_t;
+			using reference = const value_type&;
+			using pointer = const value_type*;
 			SceneNode<T>* current;
 			SceneGraph<T>* owner;
 
@@ -135,12 +133,12 @@ namespace GlProj
 				:current(current)
 				, owner(owner)
 			{}
-			explicit SceneGraphConstIterator(const SceneGraphIterator<T>& x)
+			SceneGraphConstIterator(const SceneGraphIterator<T>& x) noexcept
 				:current(x.current)
 				, owner(x.owner)
 			{}
 
-			SceneGraphConstIterator& operator=(const SceneGraphIterator<T>& x)
+			SceneGraphConstIterator& operator=(const SceneGraphIterator<T>& x) noexcept
 			{
 				current = x.current;
 				owner = x.owner;
@@ -148,20 +146,20 @@ namespace GlProj
 				return *this;
 			}
 
-			reference operator*()
+			reference operator*() noexcept
 			{
 				return current->data;
 			}
-			reference operator*() const
+			reference operator*() const noexcept
 			{
 				return current->data;
 			}
 
-			pointer operator->()
+			pointer operator->() noexcept(noexcept(&current->data))
 			{
 				return &current->data;
 			}
-			pointer operator->()const
+			pointer operator->() const noexcept(noexcept(&current->data))
 			{
 				return &current->data;
 			}

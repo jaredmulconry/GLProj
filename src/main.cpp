@@ -319,6 +319,7 @@ void PrepareAndRunGame(GLFWwindow* window)
 
 	float angle = 0.0f;
 	const float rotationSpeed = 0.2f;
+
 	auto prevTime = glfwGetTime();
 
 	while (!glfwWindowShouldClose(window))
@@ -331,7 +332,7 @@ void PrepareAndRunGame(GLFWwindow* window)
 		prevTime = newTime;
 		angle += float(delta) * rotationSpeed;
 
-		hierarchy.begin()->transform = glm::rotate(angle, glm::vec3{0.0f, 1.0f, 0.0f});
+		auto rootTransform = glm::rotate(angle, glm::vec3{ 0.0f, 1.0f, 0.0f });
 
 		for (auto pos = hierarchy.begin(); pos != hierarchy.end(); ++pos)
 		{
@@ -341,7 +342,7 @@ void PrepareAndRunGame(GLFWwindow* window)
 			auto& dat = *pos;
 			for (const auto& i : dat.meshes)
 			{
-				SetTransform(handles[i].get(), transform);
+				SetTransform(handles[i].get(), rootTransform * transform);
 			}
 		}
 
@@ -419,7 +420,9 @@ try
 #ifdef _DEBUG
 	glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(GLDbgCallback, nullptr);
-	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+	//On certain system configurations, this line enables per-frame logging of memory usage on the GPU.
+	//This is very spammy on those systems.
+	//glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 #endif
 
 	PrepareAndRunGame(win);

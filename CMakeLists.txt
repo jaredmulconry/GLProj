@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.1)
 project(GLProj)
 
+set(executable_name ${PROJECT_NAME})
+
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 macro (add_sources)
@@ -31,6 +33,7 @@ add_subdirectory(glm)
 add_subdirectory(assimp)
 add_subdirectory(bullet3)
 add_subdirectory(cryptopp)
+add_subdirectory(json)
 set(STB_SRCS stb/stb.h stb/stb_image.h stb/stb_dxt.h stb/stb_vorbis.c)
 
 find_package(OpenGL REQUIRED)
@@ -38,44 +41,38 @@ find_package(OpenGL REQUIRED)
 #source project
 add_subdirectory(src)
 
-add_executable(GLProj ${SRCS} ${STB_SRCS})
+add_executable(${executable_name} ${SRCS} ${STB_SRCS})
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
 		CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-	target_compile_options(GLProj PUBLIC -Wall -Wextra -pedantic)
+	target_compile_options(${executable_name} PUBLIC -Wall -Wextra -pedantic)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-	target_compile_options(GLProj PUBLIC /W4 /sdl)
+	target_compile_options(${executable_name} PUBLIC /W4 /sdl)
 endif()
 
-target_link_libraries(GLProj glfw)
-target_link_libraries(GLProj glm)
-target_link_libraries(GLProj assimp)
+target_link_libraries(${executable_name} glfw)
+target_link_libraries(${executable_name} glm)
+target_link_libraries(${executable_name} assimp)
 #bullet3 libraries
-target_link_libraries(GLProj Bullet3Collision)
-target_link_libraries(GLProj Bullet3Common)
-target_link_libraries(GLProj Bullet3Dynamics)
-target_link_libraries(GLProj Bullet3Geometry)
-target_link_libraries(GLProj Bullet3OpenCL_clew)
-target_link_libraries(GLProj Bullet2FileLoader)
-target_link_libraries(GLProj BulletCollision)
-target_link_libraries(GLProj BulletDynamics)
-target_link_libraries(GLProj BulletInverseDynamics)
-target_link_libraries(GLProj BulletSoftBody)
-target_link_libraries(GLProj LinearMath)
+target_link_libraries(${executable_name} Bullet3Collision Bullet3Common Bullet3Dynamics 
+Bullet3Geometry Bullet3OpenCL_clew Bullet2FileLoader BulletCollision BulletDynamics
+BulletInverseDynamics BulletSoftBody LinearMath)
 #
-target_link_libraries(GLProj cryptopp-static)
-target_link_libraries(GLProj ${OPENGL_LIBRARIES})
-target_include_directories(GLProj PUBLIC ${OPENGL_INCLUDE_DIR})
-target_include_directories(GLProj PUBLIC stb)
-target_include_directories(GLProj PUBLIC glm/glm)
-target_include_directories(GLProj PUBLIC assimp/include)
-target_include_directories(GLProj PUBLIC bullet3/src)
-target_include_directories(GLProj PUBLIC cryptopp)
-target_include_directories(GLProj PUBLIC src/include)
+target_link_libraries(${executable_name} cryptopp-static)
+target_link_libraries(${executable_name} nlohmann_json)
+target_link_libraries(${executable_name} ${OPENGL_LIBRARIES})
+target_include_directories(${executable_name} PUBLIC ${OPENGL_INCLUDE_DIR})
+target_include_directories(${executable_name} PUBLIC stb)
+target_include_directories(${executable_name} PUBLIC glm/glm)
+target_include_directories(${executable_name} PUBLIC assimp/include)
+target_include_directories(${executable_name} PUBLIC bullet3/src)
+target_include_directories(${executable_name} PUBLIC cryptopp)
+target_include_directories(${executable_name} PUBLIC json/src)
+target_include_directories(${executable_name} PUBLIC src/include)
 
-add_custom_command(TARGET GLProj PRE_BUILD
+add_custom_command(TARGET ${executable_name} PRE_BUILD
 				   COMMAND ${CMAKE_COMMAND} -E copy_directory
 				   "${CMAKE_CURRENT_SOURCE_DIR}/src/data" "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIGURATION>/data")
-add_custom_command(TARGET GLProj PRE_BUILD
+add_custom_command(TARGET ${executable_name} PRE_BUILD
 				   COMMAND ${CMAKE_COMMAND} -E copy_directory
 				   "${CMAKE_CURRENT_SOURCE_DIR}/src/data" "${CMAKE_CURRENT_BINARY_DIR}/data")

@@ -34,14 +34,15 @@ add_subdirectory(assimp)
 add_subdirectory(bullet3)
 add_subdirectory(cryptopp)
 add_subdirectory(json)
-set(STB_SRCS stb/stb.h stb/stb_image.h stb/stb_dxt.h stb/stb_vorbis.c)
+add_subdirectory(stb)
+add_subdirectory(sqlite)
 
 find_package(OpenGL REQUIRED)
 
 #source project
 add_subdirectory(src)
 
-add_executable(${executable_name} ${SRCS} ${STB_SRCS})
+add_executable(${executable_name} ${SRCS})
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
 		CMAKE_CXX_COMPILER_ID MATCHES "GNU")
@@ -53,6 +54,8 @@ endif()
 target_link_libraries(${executable_name} glfw)
 target_link_libraries(${executable_name} glm)
 target_link_libraries(${executable_name} assimp)
+target_link_libraries(${executable_name} stb)
+target_link_libraries(${executable_name} sqlite)
 #bullet3 libraries
 target_link_libraries(${executable_name} Bullet3Collision Bullet3Common Bullet3Dynamics 
 Bullet3Geometry Bullet3OpenCL_clew Bullet2FileLoader BulletCollision BulletDynamics
@@ -69,6 +72,7 @@ target_include_directories(${executable_name} PUBLIC assimp/include)
 target_include_directories(${executable_name} PUBLIC bullet3/src)
 target_include_directories(${executable_name} PUBLIC cryptopp)
 target_include_directories(${executable_name} PUBLIC json/src)
+target_include_directories(${executable_name} PUBLIC sqlite)
 target_include_directories(${executable_name} PUBLIC assimp/contrib/zlib)
 target_include_directories(${executable_name} PUBLIC src/include)
 

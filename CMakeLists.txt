@@ -60,6 +60,7 @@ BulletInverseDynamics BulletSoftBody LinearMath)
 #
 target_link_libraries(${executable_name} cryptopp-static)
 target_link_libraries(${executable_name} nlohmann_json)
+target_link_libraries(${executable_name} zlibstatic)
 target_link_libraries(${executable_name} ${OPENGL_LIBRARIES})
 target_include_directories(${executable_name} PUBLIC ${OPENGL_INCLUDE_DIR})
 target_include_directories(${executable_name} PUBLIC stb)
@@ -68,6 +69,7 @@ target_include_directories(${executable_name} PUBLIC assimp/include)
 target_include_directories(${executable_name} PUBLIC bullet3/src)
 target_include_directories(${executable_name} PUBLIC cryptopp)
 target_include_directories(${executable_name} PUBLIC json/src)
+target_include_directories(${executable_name} PUBLIC assimp/contrib/zlib)
 target_include_directories(${executable_name} PUBLIC src/include)
 
 add_custom_command(TARGET ${executable_name} PRE_BUILD

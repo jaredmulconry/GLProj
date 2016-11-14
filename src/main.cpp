@@ -125,10 +125,10 @@ inline void APIENTRY GLDbgCallback(GLenum source, GLenum type, GLuint id,
 
 inline glm::mat4 aiToGlm(const aiMatrix4x4& o)
 {
-	return{o.a1, o.a2, o.a3, o.a4,
+	return{ o.a1, o.a2, o.a3, o.a4,
 		   o.b1, o.b2, o.b3, o.b4,
 		   o.c1, o.c2, o.c3, o.c4,
-		   o.d1, o.d2, o.d3, o.d4};
+		   o.d1, o.d2, o.d3, o.d4 };
 }
 
 template<typename I>
@@ -200,8 +200,8 @@ void AddChildren(SceneGraph<ModelData>& graph,
 void PopulateGraph(SceneGraph<ModelData>& graph, aiNode* root)
 {
 	auto parent = graph.emplace(nullptr, aiToGlm(root->mTransformation),
-							std::vector<unsigned int>(root->mMeshes, root->mMeshes + root->mNumMeshes),
-							root->mName.C_Str());
+		std::vector<unsigned int>(root->mMeshes, root->mMeshes + root->mNumMeshes),
+		root->mName.C_Str());
 
 	AddChildren(graph, parent, root);
 }
@@ -220,7 +220,7 @@ LocalSharedPtr<Material> GetDefaultMaterial()
 
 	auto vs = LoadShader(GetShaderManager(), GL_VERTEX_SHADER, "./data/shaders/BasicShader.vs");
 	auto fs = LoadShader(GetShaderManager(), GL_FRAGMENT_SHADER, "./data/shaders/BasicShader.fs");
-	
+
 	AttachShader(prog.get(), vs.get());
 	AttachShader(prog.get(), fs.get());
 	LinkProgram(prog.get());
@@ -229,85 +229,89 @@ LocalSharedPtr<Material> GetDefaultMaterial()
 	*mat = prog;
 	firstRun = false;
 
-	return mat; 
+	return mat;
 }
 
 void PrepareAndRunGame(GLFWwindow* window)
 {
-	Assimp::Importer importer{};
-#ifdef _DEBUG
-	Assimp::DefaultLogger::create("AssimpLog.txt", Assimp::Logger::VERBOSE, aiDefaultLogStream_STDOUT);
-#endif
-	auto bunny = importer.ReadFile("./data/models/armadillo.obj", aiProcess_Triangulate | aiProcess_SortByPType 
-															| aiProcess_GenUVCoords | aiProcess_OptimizeGraph 
-															| aiProcess_OptimizeMeshes | aiProcess_GenSmoothNormals); 
-	importer.SetPropertyInteger(AI_CONFIG_PP_SLM_TRIANGLE_LIMIT, 0xffff);
-	bunny = importer.ApplyPostProcessing(aiProcess_SplitLargeMeshes | aiProcess_CalcTangentSpace | aiProcess_ValidateDataStructure);
-
-	if (bunny == nullptr)
-	{
-		std::string err;
-		err += importer.GetErrorString();
-		throw std::runtime_error(err);
-	}
-
-	Assimp::DefaultLogger::kill(); 
-
-	const auto& initText = "System Init";
-
-	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, sizeof(initText), initText);
-	std::vector<Renderable> submeshes; 
-	submeshes.reserve(bunny->mNumMeshes);
-	auto material = GetDefaultMaterial();
-
-	std::vector<std::string> meshNames;
-	meshNames.reserve(bunny->mNumMeshes);
-	std::transform(bunny->mMeshes, bunny->mMeshes + bunny->mNumMeshes, std::back_inserter(meshNames), 
-		[](const auto& x)
-	{
-		return x->mName.C_Str();
-	});
-
-	MakeNamesUnique(meshNames.begin(), meshNames.end());
-
-	for (int i = 0; i < int(bunny->mNumMeshes); ++i)
-	{
-		submeshes.push_back({ RegisterMesh(GetMeshManager(), bunny->mMeshes[i], meshNames[i]),
-							  nullptr });
-	}
-
-	SceneGraph<ModelData> bunnyGraph;
-	PopulateGraph(bunnyGraph, bunny->mRootNode);
-
-	Model bunnyModel{ submeshes, std::move(bunnyGraph) };
-
-	GlProj::Utilities::TestSceneGraph();
-
-	glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
+	Model model;
+	std::vector<local_shared_ptr<RenderableHandle>> handles;
 	auto renderer = GetRenderManager();
 	auto batch = GenerateRenderBatch(renderer);
 
-	std::vector<local_shared_ptr<RenderableHandle>> handles;
-	for (int i = 0; i < int(submeshes.size()); ++i)
 	{
-		handles.push_back(SubmitRenderable(batch.get(), *(submeshes[i].mesh), submeshes[i].material.get()));
-	}
-	auto& hierarchy = bunnyModel.GetHierarchy();
-	for (auto pos = hierarchy.begin(); pos != hierarchy.end(); ++pos)
-	{
-		if (pos->meshes.empty()) continue;
+		Assimp::Importer importer{};
+#ifdef _DEBUG
+		Assimp::DefaultLogger::create("AssimpLog.txt", Assimp::Logger::VERBOSE, aiDefaultLogStream_STDOUT);
+#endif
+		auto bunny = importer.ReadFile("./data/models/armadillo.obj", aiProcess_Triangulate | aiProcess_SortByPType
+			| aiProcess_GenUVCoords | aiProcess_OptimizeGraph
+			| aiProcess_OptimizeMeshes | aiProcess_GenSmoothNormals);
+		importer.SetPropertyInteger(AI_CONFIG_PP_SLM_TRIANGLE_LIMIT, 0xffff);
+		bunny = importer.ApplyPostProcessing(aiProcess_SplitLargeMeshes | aiProcess_CalcTangentSpace | aiProcess_ValidateDataStructure);
 
-		auto transform = ApplyHierarchy(*pos.current);
-		auto& dat = *pos;
-		for (const auto& i : dat.meshes)
+		if (bunny == nullptr)
 		{
-			SetTransform(handles[i].get(), transform);
+			std::string err;
+			err += importer.GetErrorString();
+			throw std::runtime_error(err);
 		}
+
+		Assimp::DefaultLogger::kill();
+
+		const auto& initText = "System Init";
+
+		glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, sizeof(initText), initText);
+		std::vector<Renderable> submeshes;
+		submeshes.reserve(bunny->mNumMeshes);
+		auto material = GetDefaultMaterial();
+
+		std::vector<std::string> meshNames;
+		meshNames.reserve(bunny->mNumMeshes);
+		std::transform(bunny->mMeshes, bunny->mMeshes + bunny->mNumMeshes, std::back_inserter(meshNames),
+			[](const auto& x)
+		{
+			return x->mName.C_Str();
+		});
+
+		MakeNamesUnique(meshNames.begin(), meshNames.end());
+
+		for (int i = 0; i < int(bunny->mNumMeshes); ++i)
+		{
+			submeshes.push_back({ RegisterMesh(GetMeshManager(), bunny->mMeshes[i], meshNames[i]),
+								  nullptr });
+		}
+
+		SceneGraph<ModelData> bunnyGraph;
+		PopulateGraph(bunnyGraph, bunny->mRootNode);
+
+		model = Model{ submeshes, std::move(bunnyGraph) };
+
+		GlProj::Utilities::TestSceneGraph();
+
+		glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
+
+		for (int i = 0; i < int(submeshes.size()); ++i)
+		{
+			handles.push_back(SubmitRenderable(batch.get(), *(submeshes[i].mesh), submeshes[i].material.get()));
+		}
+		auto& hierarchy = model.GetHierarchy();
+		for (auto pos = hierarchy.begin(); pos != hierarchy.end(); ++pos)
+		{
+			if (pos->meshes.empty()) continue;
+
+			auto transform = ApplyHierarchy(*pos.current);
+			auto& dat = *pos;
+			for (const auto& i : dat.meshes)
+			{
+				SetTransform(handles[i].get(), transform);
+			}
+		}
+		SetOverrideMaterial(batch.get(), material.get());
+		auto cam = Camera{ Camera::Orthographic{glm::vec2{8.0f, 4.5f}}, -5.0f, 5.0f };
+		cam.transform = Transform{ {0.0f, -1.0f, 0.0f}, glm::quat(), {1.0f, 1.0f, 1.0f} };
+		UpdateBatchCamera(batch.get(), cam);
 	}
-	SetOverrideMaterial(batch.get(), material.get());
-	auto cam = Camera{ Camera::Orthographic{glm::vec2{8.0f, 4.5f}}, -5.0f, 5.0f};
-	cam.transform = Transform{ {0.0f, -1.0f, 0.0f}, glm::quat(), {1.0f, 1.0f, 1.0f} };
-	UpdateBatchCamera(batch.get(), cam);
 
 	glPopDebugGroup();
 
@@ -315,8 +319,8 @@ void PrepareAndRunGame(GLFWwindow* window)
 
 	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 1, sizeof(renderingGroup), renderingGroup);
 
-	importer.FreeScene();
 
+	auto& hierarchy = model.GetHierarchy();
 	float angle = 0.0f;
 	const float rotationSpeed = 0.2f;
 
@@ -325,7 +329,7 @@ void PrepareAndRunGame(GLFWwindow* window)
 	while (!glfwWindowShouldClose(window))
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
-				GL_STENCIL_BUFFER_BIT); 
+			GL_STENCIL_BUFFER_BIT);
 
 		auto newTime = glfwGetTime();
 		auto delta = newTime - prevTime;
@@ -379,7 +383,7 @@ try
 #endif
 
 	auto win = glfwCreateWindow(1280, 720, "Bad Window", nullptr, nullptr);
-	
+
 	if (win == nullptr)
 	{
 		return EXIT_FAILURE;
@@ -430,7 +434,7 @@ try
 	glfwDestroyWindow(win);
 	glfwTerminate();
 }
-catch(std::exception& e)
+catch (std::exception& e)
 {
 	std::cerr << e.what() << std::endl;
 	throw;

@@ -1,6 +1,6 @@
 #pragma once
+#include "gl_core_4_5.h"
 #include "LocalSharedPtr.hpp"
-#include "OpenGLTypes.hpp"
 #include <initializer_list>
 #include <string>
 

@@ -9,22 +9,6 @@
 #include <unordered_map>
 #include <utility>
 
-
-#if !defined(__GNUG__) && !defined(__clang__)
-#include <experimental/filesystem>
-#endif
-
-static std::string NormalisePath(const std::string& path);
-
-std::string NormalisePath(const std::string& path)
-{
-#if defined(__GNUG__) || defined(__clang__)
-	return path;
-#else
-	return std::experimental::filesystem::canonical(path).u8string();
-#endif
-}
-
 using namespace GlProj::Utilities;
 
 namespace GlProj

@@ -4,28 +4,52 @@
 #include "Shader.hpp"
 #include "ShadingProgram.hpp"
 #include <algorithm>
-#include <cerrno>
-#include <cstdio>
-#include <cstring>
+#include <fstream>
+#include <iomanip>
+#include <istream>
+#include <iterator>
 #include <stdexcept>
+#include <system_error>
 #include <unordered_map>
 #include <utility>
 
-#if !defined(__GNUG__) && !defined(__clang__)
-#include <experimental/filesystem>
+#if defined(__has_include)
+	#if __has_include("experimental/filesystem")
+	#define HAS_FILESYSTEM
+	#define HAS_EXPERIMENTAL_FILESYSTEM
+	#elif __has_include("filesystem")
+	#define HAS_FILESYSTEM
+	#define HAS_STD_FILESYSTEM
+	#endif
+#elif defined(__cpp_lib_experimental_filesystem)
+#define HAS_FILESYSTEM
+#define HAS_EXPERIMENTAL_FILESYSTEM
+#elif defined(_MSC_VER) && _MSC_VER >= 1700
+#define HAS_FILESYSTEM
+#define HAS_EXPERIMENTAL_FILESYSTEM
 #endif
 
-static std::string NormalisePath(const std::string& path);
-
-std::string NormalisePath(const std::string& path)
-{
-#if defined(__GNUG__) || defined(__clang__)
-	return path;
+#if defined(HAS_STD_FILESYSTEM)
+#include <filesystem>
+#define FILESYSTEM_NAMESPACE std::filesystem
+#elif defined(HAS_EXPERIMENTAL_FILESYSTEM)
+#include <experimental/filesystem>
+#define FILESYSTEM_NAMESPACE std::experimental::filesystem
 #else
-	return std::experimental::filesystem::canonical(path).u8string();
+#define FILESYSTEM_NAMESPACE std
+#endif
+
+std::string GlProj::Utilities::NormalisePath(const std::string& path)
+{
+	using namespace FILESYSTEM_NAMESPACE;
+#if defined(HAS_FILESYSTEM)
+	return canonical(path).u8string();
+#else
+	return path;
 #endif
 }
 
+using namespace GlProj::Utilities;
 
 namespace GlProj
 {
@@ -91,54 +115,31 @@ namespace GlProj
 				}
 			}
 
-			FILE* shaderFile = std::fopen(path.c_str(), "r");
+			auto shaderFile = std::ifstream(path);
 			auto errnum = errno;
-			if(errnum != 0)
+			if(!shaderFile.is_open())
 			{
 				std::string errMessage = "Shader file could not be opened.\n";
 				errMessage += "File: "; 
 				errMessage += path + '\n';
 				errMessage += "Error: ";
-				errMessage += std::strerror(errnum);
+				errMessage += std::error_code(errnum, std::system_category()).message();
 				errMessage += '\n';
 
 				throw std::runtime_error(errMessage);
 			}
-			std::unique_ptr<FILE, void(*)(FILE*)> fileHandle(shaderFile, [](FILE* f) { std::fclose(f); });
+			shaderFile.exceptions(std::ios_base::badbit);
+			shaderFile.imbue(std::locale::classic());
+			shaderFile.unsetf(std::ios_base::skipws);
 
-			auto begin = ftell(fileHandle.get());
-			if(fseek(fileHandle.get(), 0, SEEK_END) != 0)
-			{
-				std::string errMessage = "Unknown error occurred while seeking in shader file.\n";
-				errMessage += "File: ";
-				errMessage += path + '\n';
-				throw std::runtime_error(errMessage);
-			}
-			auto end = ftell(fileHandle.get());
-			auto fileSize = end - begin;
+			std::string shaderSource{ std::istream_iterator<char>(shaderFile),
+										std::istream_iterator<char>() };
 
-			auto sourceBuffer = std::make_unique<char[]>(fileSize);
-
-			if(fseek(fileHandle.get(), 0, SEEK_SET) != 0)
-			{
-				std::string errMessage = "Unknown error occurred while seeking in shader file.\n";
-				errMessage += "File: ";
-				errMessage += path + '\n';
-				throw std::runtime_error(errMessage);
-			}
-
-			auto totalRead = fread(sourceBuffer.get(), sizeof(char), fileSize, fileHandle.get());
-			if(totalRead == 0)
-			{
-				std::string errMessage = "Unknown error occurred while reading shader file.\n";
-				errMessage += "File: ";
-				errMessage += path + '\n';
-				throw std::runtime_error(errMessage);
-			}
+			shaderFile.close();
 
 			auto shaderID = glCreateShader(shaderType);
-			auto source = sourceBuffer.get();
-			auto sourceSize = GLint(totalRead);
+			auto source = shaderSource.data();
+			auto sourceSize = GLint(shaderSource.size());
 			glShaderSource(shaderID, 1, &source, &sourceSize);
 			glCompileShader(shaderID);
 

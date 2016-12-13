@@ -6,6 +6,10 @@
 
 namespace GlProj
 {
+	namespace Utilities
+	{
+		std::string NormalisePath(const std::string& path);
+	}
 	namespace Graphics
 	{
 		class TextureManager;

@@ -21,6 +21,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <exception>
+#include <iomanip>
 #include <iostream>
 #include <iterator>
 #include <stdexcept>
@@ -360,6 +361,41 @@ void PrepareAndRunGame(GLFWwindow* window)
 	glPopDebugGroup();
 }
 
+void LogExceptions()
+{
+	auto exPtr = std::current_exception();
+	int depth = 0;
+	static const constexpr int tabwidth = 2;
+
+	while(true)
+	{
+		try
+		{
+			std::rethrow_exception(exPtr);
+		}
+		catch (std::nested_exception& e)
+		{
+			auto& firstExcept = dynamic_cast<std::exception&>(e);
+			std::string msg = firstExcept.what();
+			std::cerr << std::right << std::setw(msg.length() + tabwidth * depth) << msg << std::endl;
+			exPtr = e.nested_ptr();
+			++depth;
+		}
+		catch (std::exception& e)
+		{
+			std::string msg = e.what();
+			std::cerr << std::right << std::setw(msg.length() + tabwidth * depth) << msg << std::endl;
+			break;
+		}
+		catch (...)
+		{
+			std::string msg = "Unknown exception thrown.";
+			std::cerr << std::right << std::setw(msg.length() + tabwidth * depth) << msg << std::endl;
+			break;
+		}
+	}
+}
+
 int main()
 try
 {
@@ -436,6 +472,6 @@ try
 }
 catch (std::exception& e)
 {
-	std::cerr << e.what() << std::endl;
+	LogExceptions();
 	throw;
 }

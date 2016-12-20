@@ -1,6 +1,6 @@
 #include "Transform.hpp"
 #include "glm/matrix.hpp"
-#include "glm/gtx/transform.hpp"
+#define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/matrix_decompose.hpp"
 #include "glm/vec3.hpp"
 #include "glm/vec4.hpp"
@@ -16,9 +16,9 @@ namespace GlProj
 		glm::mat4 ToMatrix(const Transform& t) noexcept
 		{
 			auto result = glm::mat4(1.0f);
-			result *= glm::scale(t.scale);
+			result *= glm::scale(glm::mat4(1), t.scale);
 			result *= glm::mat4_cast(t.rotation);
-			result *= glm::translate(t.position);
+			result *= glm::translate(glm::mat4(1), t.position);
 			return result;
 		}
 		Transform FromMatrix(const glm::mat4& m) noexcept

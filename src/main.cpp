@@ -5,7 +5,7 @@
 #include "assimp/postprocess.h"
 #include "assimp/scene.h"
 #include "Camera.hpp"
-#include "glm/gtx/transform.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 #include "Material.hpp"
 #include "MeshManager.hpp"
 #include "Model.hpp"
@@ -337,7 +337,7 @@ void PrepareAndRunGame(GLFWwindow* window)
 		prevTime = newTime;
 		angle += float(delta) * rotationSpeed;
 
-		auto rootTransform = glm::rotate(angle, glm::vec3{ 0.0f, 1.0f, 0.0f });
+		auto rootTransform = glm::rotate(glm::mat4(1), angle, glm::vec3{ 0.0f, 1.0f, 0.0f });
 
 		for (auto pos = hierarchy.begin(); pos != hierarchy.end(); ++pos)
 		{
@@ -470,7 +470,7 @@ try
 	glfwDestroyWindow(win);
 	glfwTerminate();
 }
-catch (std::exception& e)
+catch (std::exception&)
 {
 	LogExceptions();
 	throw;

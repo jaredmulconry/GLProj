@@ -30,8 +30,6 @@
 
 using namespace GlProj::Graphics;
 
-static const constexpr bool dumpCapabilities = true;
-
 inline void APIENTRY GLDbgCallback(GLenum source, GLenum type, GLuint id,
 	GLenum severity, GLsizei, const GLchar* message,
 	const void*)
@@ -396,6 +394,53 @@ void LogExceptions()
 	}
 }
 
+GLFWwindow* CreateWindowOnMonitor(const char* name, GLFWmonitor* mon, GLFWwindow* shareWith, int windowHeightOffset = 0)
+{
+    auto monitorMode = glfwGetVideoMode(mon);
+    glfwWindowHint(GLFW_RED_BITS, monitorMode->redBits);
+    glfwWindowHint(GLFW_GREEN_BITS, monitorMode->greenBits);
+    glfwWindowHint(GLFW_BLUE_BITS, monitorMode->blueBits);
+    glfwWindowHint(GLFW_REFRESH_RATE, monitorMode->refreshRate);
+    glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE);
+    glfwWindowHint(GLFW_DECORATED, GL_FALSE);
+    auto win = glfwCreateWindow(monitorMode->width, monitorMode->height + windowHeightOffset, name, nullptr, shareWith);
+    if (win == nullptr) return nullptr;
+    int monX, monY;
+    glfwGetMonitorPos(mon, &monX, &monY);
+    glfwSetWindowPos(win, monX, monY);
+
+    return win;
+}
+
+struct KeyInput
+{
+    bool left = false, right = false, up = false, down = false;
+};
+
+KeyInput inputs;
+
+void KeyboardCallback(GLFWwindow*, int key, int, int action, int)
+{
+    bool pressed = action == GLFW_PRESS || action == GLFW_REPEAT;
+    switch (key)
+    {
+    default:
+        break;
+    case GLFW_KEY_W:
+        inputs.up = pressed;
+        break;
+    case GLFW_KEY_S:
+        inputs.down = pressed;
+        break;
+    case GLFW_KEY_A:
+        inputs.left = pressed;
+        break;
+    case GLFW_KEY_D:
+        inputs.right = pressed;
+        break;
+    }
+}
+
 int main()
 try
 {
@@ -409,65 +454,296 @@ try
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-	glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_CONTEXT_RELEASE_BEHAVIOR, GLFW_RELEASE_BEHAVIOR_FLUSH);
 #ifdef _DEBUG
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
-#else
-	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_FALSE);
 #endif
 
-	auto win = glfwCreateWindow(1280, 720, "Bad Window", nullptr, nullptr);
+    int monitorCount;
+    auto monitors = glfwGetMonitors(&monitorCount);
 
-	if (win == nullptr)
-	{
-		return EXIT_FAILURE;
-	}
+    struct WindowData
+    {
+        GLFWwindow* win;
+        GLuint frameBuffer;
+        struct Viewport
+        {
+            GLint x, y;
+            GLsizei width, height;
+        } viewport;
 
-	glfwMakeContextCurrent(win);
+        glm::vec3 location;
+    };
+
+    std::vector<WindowData> windows;
+    auto primaryWin = CreateWindowOnMonitor("Bad Window", monitors[0], nullptr, 1);
+    if (primaryWin == nullptr)
+    {
+        return EXIT_FAILURE;
+    }
+    glfwSetKeyCallback(primaryWin, KeyboardCallback);
+    {
+        WindowData window;
+        window.win = primaryWin;
+        windows.push_back(window);
+        for (int i = 1; i < monitorCount; ++i)
+        {
+            auto secondaryWin = CreateWindowOnMonitor("Secondary", monitors[i], primaryWin);
+            if (secondaryWin == nullptr) return EXIT_FAILURE;
+            window.win = secondaryWin;
+            windows.push_back(window);
+            glfwSetKeyCallback(secondaryWin, KeyboardCallback);
+        }
+    }
+
+	glfwMakeContextCurrent(primaryWin);
 
 	if (ogl_LoadFunctions() != ogl_LOAD_SUCCEEDED)
 	{
 		return EXIT_FAILURE;
 	}
 
-	if (dumpCapabilities)
-	{
-		int contextMajorVersion = glfwGetWindowAttrib(win, GLFW_CONTEXT_VERSION_MAJOR);
-		int contextMinorVersion = glfwGetWindowAttrib(win, GLFW_CONTEXT_VERSION_MINOR);
-		int maxVertAttribs = 0, maxVertAttribBinds = 0;
-		int maxVertUniformBlocks = 0, maxVertUniformComps = 0, maxVertUniformVecs = 0;
+    GLint curX = 0, curY = 0;
 
+    for (auto& window : windows)
+    {
+        glfwMakeContextCurrent(window.win);
+	    glEnable(GL_DEPTH_TEST);
 
-		glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertAttribs);
-		glGetIntegerv(GL_MAX_VERTEX_ATTRIB_BINDINGS, &maxVertAttribBinds);
-		glGetIntegerv(GL_MAX_VERTEX_UNIFORM_BLOCKS, &maxVertUniformBlocks);
-		glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, &maxVertUniformComps);
-		glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxVertUniformVecs);
-
-		std::cout << "Major version is " << contextMajorVersion << '\n';
-		std::cout << "Minor version is " << contextMinorVersion << '\n';
-		std::cout << "GL_MAX_VERTEX_ATTRIBS " << maxVertAttribs << '\n';
-		std::cout << "GL_MAX_VERTEX_ATTRIB_BINDINGS " << maxVertAttribBinds << '\n';
-		std::cout << "GL_MAX_VERTEX_UNIFORM_BLOCKS " << maxVertUniformBlocks << '\n';
-		std::cout << "GL_MAX_VERTEX_UNIFORM_COMPONENTS " << maxVertUniformComps << '\n';
-		std::cout << "GL_MAX_VERTEX_UNIFORM_VECTORS " << maxVertUniformVecs << '\n';
-	}
-
-	glEnable(GL_DEPTH_TEST);
+        glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
 
 #ifdef _DEBUG
-	glEnable(GL_DEBUG_OUTPUT);
-	glDebugMessageCallback(GLDbgCallback, nullptr);
-	//On certain system configurations, this line enables per-frame logging of memory usage on the GPU.
-	//This is very spammy on those systems.
-	//glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        glDebugMessageCallback(GLDbgCallback, nullptr);
+        //On certain system configurations, this line enables per-frame logging of memory usage on the GPU.
+        //This is very spammy on those systems.
+        //glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 #endif
+    }
 
-	PrepareAndRunGame(win);
+    //Shared framebuffer for
+    int primaryBackWidth, primaryBackHeight;
+    glfwGetFramebufferSize(primaryWin, &primaryBackWidth, &primaryBackHeight);
+    --primaryBackHeight;
 
-	glfwDestroyWindow(win);
+    GLint primaryFrameWidth = primaryBackWidth * 3,
+        primaryFrameHeight = primaryBackHeight;
+
+    GLuint primaryTextures[2];
+    glGenTextures(2, primaryTextures);
+    glBindTexture(GL_TEXTURE_2D, primaryTextures[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, primaryFrameWidth, primaryFrameHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glBindTexture(GL_TEXTURE_2D, primaryTextures[1]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, primaryFrameWidth, primaryFrameHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+
+    for (auto& window : windows)
+    {
+        glfwMakeContextCurrent(window.win);
+        glGenFramebuffers(1, &window.frameBuffer);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, window.frameBuffer);
+        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, primaryTextures[0], 0);
+        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, primaryTextures[1], 0);
+        window.viewport.x = curX;
+        window.viewport.y = curY;
+        window.viewport.width = primaryBackWidth;
+        window.viewport.height = primaryBackHeight;
+
+        curX += primaryBackWidth;
+    }
+
+    glfwMakeContextCurrent(primaryWin);
+    auto camera = Camera{ Camera::Orthographic{ glm::vec2{ 8.0f, 4.5f } }, -5.0f, 5.0f };
+    camera.transform = Transform{ { 0.0f, -1.0f, 0.0f }, glm::quat(),{ 1.0f, 1.0f, 1.0f } };
+
+    //Load model for testing
+    Model model;
+    std::vector<local_shared_ptr<RenderableHandle>> handles;
+    auto renderer = GetRenderManager();
+    auto batch = GenerateRenderBatch(renderer);
+
+    {
+        Assimp::Importer importer{};
+#ifdef _DEBUG
+        Assimp::DefaultLogger::create("AssimpLog.txt", Assimp::Logger::VERBOSE, aiDefaultLogStream_STDOUT);
+#endif
+        auto bunny = importer.ReadFile("./data/models/armadillo.obj", aiProcess_Triangulate | aiProcess_SortByPType
+            | aiProcess_GenUVCoords | aiProcess_OptimizeGraph
+            | aiProcess_OptimizeMeshes | aiProcess_GenSmoothNormals);
+        importer.SetPropertyInteger(AI_CONFIG_PP_SLM_TRIANGLE_LIMIT, 0xffff);
+        bunny = importer.ApplyPostProcessing(aiProcess_SplitLargeMeshes | aiProcess_CalcTangentSpace | aiProcess_ValidateDataStructure);
+
+        if (bunny == nullptr)
+        {
+            std::string err;
+            err += importer.GetErrorString();
+            throw std::runtime_error(err);
+        }
+
+        Assimp::DefaultLogger::kill();
+
+        const auto& initText = "System Init";
+
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, sizeof(initText), initText);
+        std::vector<Renderable> submeshes;
+        submeshes.reserve(bunny->mNumMeshes);
+        auto material = GetDefaultMaterial();
+
+        std::vector<std::string> meshNames;
+        meshNames.reserve(bunny->mNumMeshes);
+        std::transform(bunny->mMeshes, bunny->mMeshes + bunny->mNumMeshes, std::back_inserter(meshNames),
+            [](const auto& x)
+        {
+            return x->mName.C_Str();
+        });
+
+        MakeNamesUnique(meshNames.begin(), meshNames.end());
+
+        for (int i = 0; i < int(bunny->mNumMeshes); ++i)
+        {
+            submeshes.push_back({ RegisterMesh(GetMeshManager(), bunny->mMeshes[i], meshNames[i]),
+                nullptr });
+        }
+
+        SceneGraph<ModelData> bunnyGraph;
+        PopulateGraph(bunnyGraph, bunny->mRootNode);
+
+        model = Model{ submeshes, std::move(bunnyGraph) };
+
+        GlProj::Utilities::TestSceneGraph();
+
+        glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
+
+        for (int i = 0; i < int(submeshes.size()); ++i)
+        {
+            handles.push_back(SubmitRenderable(batch.get(), *(submeshes[i].mesh), submeshes[i].material.get()));
+        }
+        glFlush();
+        auto& hierarchy = model.GetHierarchy();
+        for (auto pos = hierarchy.begin(); pos != hierarchy.end(); ++pos)
+        {
+            if (pos->meshes.empty()) continue;
+
+            auto transform = ApplyHierarchy(*pos.current);
+            auto& dat = *pos;
+            for (const auto& i : dat.meshes)
+            {
+                SetTransform(handles[i].get(), transform);
+            }
+        }
+        SetOverrideMaterial(batch.get(), material.get());
+        UpdateBatchCamera(batch.get(), camera);
+    }
+
+    glPopDebugGroup();
+    //
+
+    windows[0].location = { 0.0f, -1.0f, 0.0f };
+    windows[1].location = { 8.0f, -1.0f, 0.0f };
+    windows[2].location = { -8.0f, -1.0f, 0.0f };
+
+    auto& hierarchy = model.GetHierarchy();
+    float angle = 0.0f;
+    const float rotationSpeed = 0.6f;
+
+    auto prevTime = glfwGetTime();
+
+    glm::vec3 modelPos{0.0f};
+    const float moveSpeed = 5.0f;
+
+    bool run = true;
+    while (run)
+    {
+        glfwMakeContextCurrent(primaryWin);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, windows[0].frameBuffer);
+        glViewport(0, 0, primaryFrameWidth, primaryFrameHeight);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        //Update model transform
+        auto newTime = glfwGetTime();
+        auto delta = newTime - prevTime;
+        prevTime = newTime;
+        angle += float(delta) * rotationSpeed;
+
+        if (inputs.up)
+        {
+            modelPos.y += moveSpeed * float(delta);
+        }
+        else if (inputs.down)
+        {
+            modelPos.y -= moveSpeed * float(delta);
+        }
+        if (inputs.left)
+        {
+            modelPos.x -= moveSpeed * float(delta);
+        }
+        else if (inputs.right)
+        {
+            modelPos.x += moveSpeed * float(delta);
+        }
+
+        auto rootTransform = glm::translate(glm::mat4(1), modelPos) * glm::rotate(glm::mat4(1), angle, glm::vec3{ 0.0f, 1.0f, 0.0f });
+
+        for (auto pos = hierarchy.begin(); pos != hierarchy.end(); ++pos)
+        {
+            if (pos->meshes.empty()) continue;
+
+            auto transform = ApplyHierarchy(*pos.current);
+            auto& dat = *pos;
+            for (const auto& i : dat.meshes)
+            {
+                SetTransform(handles[i].get(), rootTransform * transform);
+            }
+        }
+        //
+
+        //Draw to all viewports
+        for (auto& window : windows)
+        {
+            if (glfwWindowShouldClose(window.win))
+            {
+                run = false;
+                break;
+            }
+
+            glViewport(window.viewport.x, window.viewport.y, window.viewport.width, window.viewport.height);
+
+            //Update camera and draw per screen region
+            camera.transform.position = window.location;
+            UpdateBatchCamera(batch.get(), camera);
+            Draw(renderer);
+            //
+            glFlush();
+        }
+
+        glFinish();
+
+        for (auto& window : windows)
+        {
+            glfwMakeContextCurrent(window.win);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+            glBlitFramebuffer(window.viewport.x, window.viewport.y, 
+                window.viewport.x + window.viewport.width, window.viewport.y + window.viewport.height,
+                0, 0, primaryBackWidth, primaryBackHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+            glFlush();
+        }
+
+        glFinish();
+
+        for (auto& window : windows)
+        {
+            glfwSwapBuffers(window.win);
+        }
+
+        glfwPollEvents();
+    }
+
+    for (auto& window : windows)
+    {
+	    glfwDestroyWindow(window.win);
+    }
 	glfwTerminate();
 }
 catch (std::exception&)

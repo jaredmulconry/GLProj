@@ -46,7 +46,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
 		CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 	target_compile_options(${executable_name} PUBLIC -Wall -Wextra -pedantic)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-	target_compile_options(${executable_name} PUBLIC /W4 /sdl)
+	target_compile_options(${executable_name} PUBLIC /W3 /sdl)
 endif()
 
 target_link_libraries(${executable_name} glfw)

@@ -414,7 +414,7 @@ GLFWwindow* CreateWindowOnMonitor(const char* name, GLFWmonitor* mon, GLFWwindow
 
 struct KeyInput
 {
-    bool left = false, right = false, up = false, down = false;
+    bool left = false, right = false, up = false, down = false, escape = false;
 };
 
 KeyInput inputs;
@@ -437,6 +437,9 @@ void KeyboardCallback(GLFWwindow*, int key, int, int action, int)
         break;
     case GLFW_KEY_D:
         inputs.right = pressed;
+		break;
+	case GLFW_KEY_ESCAPE:
+		inputs.escape = pressed;
         break;
     }
 }
@@ -682,6 +685,10 @@ try
         {
             modelPos.x += moveSpeed * float(delta);
         }
+		if (inputs.escape)
+		{
+			glfwSetWindowShouldClose(windows[0].win, GLFW_TRUE);
+		}
 
         auto rootTransform = glm::translate(glm::mat4(1), modelPos) * glm::rotate(glm::mat4(1), angle, glm::vec3{ 0.0f, 1.0f, 0.0f });
 

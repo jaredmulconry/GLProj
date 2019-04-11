@@ -232,6 +232,8 @@ namespace GlProj
 
 					Increment();
 				}
+
+				return *this;
 			}
 			template<typename U,
 				typename = std::enable_if_t<std::is_convertible<U*, T*>::value>>
@@ -244,6 +246,8 @@ namespace GlProj
 					x.InternalSetPtr(nullptr);
 					x.InternalSetRef(nullptr);
 				}
+
+				return *this;
 			}
 
 			T* get() const noexcept

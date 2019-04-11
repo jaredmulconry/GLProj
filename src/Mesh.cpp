@@ -85,12 +85,12 @@ namespace GlProj
 					auto uvGL = MeshSlotToGL(MeshSlots::TexCoord0) + i;
 					auto uvSlot = MeshSlots(uvGL);
 					vertexData[uvGL] = MeshDataBuffer(BufferType::array,
-						mesh->mNumVertices * mesh->mNumUVComponents[i],
+						mesh->mNumVertices * sizeof(*mesh->mTextureCoords[i]),
 						mesh->mTextureCoords[i],
 						GL_FLOAT,
 						mesh->mNumUVComponents[i]);
 					EnableAttribute(uvSlot);
-					SetAttributePointer(uvSlot, vertexData[uvGL]);
+					SetAttributePointer(uvSlot, vertexData[uvGL], sizeof(*mesh->mTextureCoords[i]));
 				}
 			}
 			int colourChannelCount = std::min(static_cast<int>(mesh->GetNumColorChannels()), MaxColourChannels);

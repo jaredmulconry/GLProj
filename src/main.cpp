@@ -571,10 +571,10 @@ try
 #ifdef _DEBUG
         Assimp::DefaultLogger::create("AssimpLog.txt", Assimp::Logger::VERBOSE, aiDefaultLogStream_STDOUT);
 #endif
-        auto bunny = importer.ReadFile("./data/models/armadillo.obj", aiProcess_Triangulate | aiProcess_SortByPType
+        importer.SetPropertyInteger(AI_CONFIG_PP_SLM_TRIANGLE_LIMIT, 0xfffff);
+        auto bunny = importer.ReadFile("./data/models/knight.obj", aiProcess_Triangulate | aiProcess_SortByPType
             | aiProcess_GenUVCoords | aiProcess_OptimizeGraph
             | aiProcess_OptimizeMeshes | aiProcess_GenSmoothNormals);
-        importer.SetPropertyInteger(AI_CONFIG_PP_SLM_TRIANGLE_LIMIT, 0xffff);
         bunny = importer.ApplyPostProcessing(aiProcess_SplitLargeMeshes | aiProcess_CalcTangentSpace | aiProcess_ValidateDataStructure);
 
         if (bunny == nullptr)
@@ -585,6 +585,15 @@ try
         }
 
         Assimp::DefaultLogger::kill();
+
+		unsigned long long faceCount = 0ull;
+
+		for (int i = 0; i < (int)bunny->mNumMeshes; ++i)
+		{
+			faceCount += bunny->mMeshes[i]->mNumFaces;
+		}
+
+		std::cout << "Total tris: " << faceCount << '\n';
 
         const auto& initText = "System Init";
 
